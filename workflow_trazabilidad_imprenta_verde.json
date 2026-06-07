@@ -11,8 +11,8 @@
         0
       ],
       "parameters": {
-        "content": "## CARRIL 1 — Pedido nuevo\nSe activa con cada correo nuevo. Detecta la linea de negocio (Merchandising o Papeleria), registra la OT en Sheets, genera una pre-cotizacion automatica en la hoja 'Cotizaciones Merchandising' para pedidos de esta linea, y notifica al disenador, cliente y secretarias.",
-        "height": 160,
+        "content": "## CARRIL 1 — Pedido / Consulta nueva\nDetecta linea de negocio: Merchandising → busca precio en 'Lista de Precios Merchandising' y genera cotizacion automatica al estilo PDF (si el producto esta en la lista) o avisa que llega pronto.\nPapeleria → registra la consulta y avisa que el encargado enviara cotizacion manual.\nSiempre: guarda OT en Sheets y notifica al disenador y secretarias.",
+        "height": 200,
         "width": 400,
         "color": 4
       }
@@ -199,7 +199,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        1400,
+        2240,
         0
       ],
       "credentials": {
@@ -406,7 +406,7 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        1960,
+        2800,
         -80
       ],
       "credentials": {
@@ -429,7 +429,7 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        1960,
+        2800,
         0
       ],
       "credentials": {
@@ -452,7 +452,7 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        1960,
+        2800,
         80
       ],
       "credentials": {
@@ -965,7 +965,7 @@
       "typeVersion": 2,
       "position": [
         840,
-        200
+        250
       ],
       "parameters": {
         "jsCode": "const item = $input.first(); const d = item.json; const now = new Date(); const pad = (n) => String(n).padStart(2, '0'); const dateStr = now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()); const sec = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds(); const seqCot = String((sec + 500) % 1000).padStart(3, '0'); const idCotiz = 'COT-' + dateStr + '-' + seqCot; const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']; const fechaFormal = 'Santiago, ' + now.getDate() + ' de ' + meses[now.getMonth()] + ' de ' + now.getFullYear(); const cuerpo = (d.Cuerpo_Correo || '').slice(0, 300); const descProyecto = d.Asunto_Pedido + (cuerpo ? ' | ' + cuerpo : ''); return [{json:{...d,N_Cotiz:idCotiz,ID_Cotiz:idCotiz,Fecha_Formal:fechaFormal,Atencion:d.Cliente,Descripcion_Proyecto:descProyecto,Producto_1:'',Cantidad_1:0,ValorUnit_1:0,Subtotal_1:0,Producto_2:'',Cantidad_2:0,ValorUnit_2:0,Subtotal_2:0,Producto_3:'',Cantidad_3:0,ValorUnit_3:0,Subtotal_3:0,Producto_4:'',Cantidad_4:0,ValorUnit_4:0,Subtotal_4:0,Producto_5:'',Cantidad_5:0,ValorUnit_5:0,Subtotal_5:0,Subtotal_General:0,IVA_19:0,Total:0,Plazo_Produccion:'3-5 dias habiles (confirmar al momento de aprobacion)',Modalidad_Entrega:'Por confirmar (Despacho / Retiro)',Estado_Cotiz:'Pendiente revision',Notas_Cotiz:'Generada automaticamente - completar precios antes de enviar'}}];"
@@ -977,8 +977,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        1120,
-        200
+        1960,
+        250
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -1399,11 +1399,67 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1680,
+        2520,
         0
       ],
       "parameters": {
-        "jsCode": "const d = $input.first().json; const esMerch = d.LineaNegocio === 'Merchandising'; const asuntoCliente = esMerch   ? 'Consulta recibida - Folio ' + d.ID_OT + ' | La Imprenta Verde'   : 'Pedido recibido - Folio ' + d.ID_OT + ' | La Imprenta Verde'; let mensajeCliente; if (esMerch) {   mensajeCliente =     '<div style=\\'font-family:Arial,sans-serif;max-width:600px\\'>' +     '<p>Hola <b>' + d.Cliente + '</b>!</p>' +     '<p>Recibimos tu consulta y ya quedo registrada. Estamos revisando los detalles y te enviamos la cotizacion formal a la brevedad.</p>' +     '<table border=\\'1\\' cellpadding=\\'8\\' cellspacing=\\'0\\' style=\\'border-collapse:collapse;width:100%;margin:16px 0\\'>' +     '<tr style=\\'background:#f0f7f4\\'><td><b>Numero de folio</b></td><td><b>' + d.ID_OT + '</b></td></tr>' +     '<tr><td>Consulta</td><td>' + d.Asunto_Pedido + '</td></tr>' +     '</table>' +     '<p>Cualquier duda escribenos a <a href=\\'mailto:secretarias@laimprentaverde.cl\\'>secretarias@laimprentaverde.cl</a>.</p>' +     '<p>Gracias por preferirnos!</p>' +     '<hr style=\\'border:none;border-top:1px solid #eee;margin:16px 0\\'>' +     '<p style=\\'color:#888;font-size:12px\\'>La Imprenta Verde | pedidos@laimprentaverde.cl | Mensaje automatico.</p>' +     '</div>'; } else {   mensajeCliente =     '<div style=\\'font-family:Arial,sans-serif;max-width:600px\\'>' +     '<h2 style=\\'color:#2d6a4f\\'>Hola ' + d.Cliente + ', recibimos tu pedido!</h2>' +     '<p>Muchas gracias por escribirnos. Ya tenemos tu solicitud registrada y nuestro equipo se va a poner en marcha de inmediato.</p>' +     '<table border=\\'1\\' cellpadding=\\'8\\' cellspacing=\\'0\\' style=\\'border-collapse:collapse;width:100%;margin:16px 0\\'>' +     '<tr style=\\'background:#f0f7f4\\'><td><b>Numero de folio</b></td><td><b>' + d.ID_OT + '</b></td></tr>' +     '<tr><td>Descripcion</td><td>' + d.Asunto_Pedido + '</td></tr>' +     '<tr><td>Fecha estimada de entrega</td><td><b>' + d.Fecha_Entrega_Estimada + '</b></td></tr>' +     '</table>' +     '<p>Guarda tu numero de folio, te va a servir para hacer seguimiento.</p>' +     '<p>Cualquier duda escribenos a <a href=\\'mailto:secretarias@laimprentaverde.cl\\'>secretarias@laimprentaverde.cl</a>.</p>' +     '<p>Gracias por confiar en nosotros, trabajamos con dedicacion para que tu pedido quede perfecto.</p>' +     '<hr style=\\'border:none;border-top:1px solid #eee;margin:16px 0\\'>' +     '<p style=\\'color:#888;font-size:12px\\'>La Imprenta Verde | pedidos@laimprentaverde.cl | Mensaje automatico.</p>' +     '</div>'; } return [{json:{...d, asuntoCliente: asuntoCliente, mensajeCliente: mensajeCliente}}];"
+        "jsCode": "const d = $input.first().json; const esMerch = d.LineaNegocio === 'Merchandising'; let asuntoCliente, mensajeCliente; if (esMerch && d.cotizacion_automatica) {   asuntoCliente = 'Cotización N° ' + d.N_Cotiz + ' | La Imprenta Verde';   mensajeCliente = d.htmlCotizacion; } else if (esMerch) {   asuntoCliente = 'Consulta recibida - Folio ' + d.ID_OT + ' | La Imprenta Verde';   mensajeCliente =     '<div style=\\'font-family:Arial,sans-serif;max-width:600px\\'>'     + '<p>Hola <b>' + d.Cliente + '</b>!</p>'     + '<p>Recibimos tu consulta y ya quedo registrada. Estamos revisando disponibilidad y precios, y te enviamos la cotizacion formal muy pronto.</p>'     + '<table border=\\'1\\' cellpadding=\\'8\\' cellspacing=\\'0\\' style=\\'border-collapse:collapse;width:100%;margin:16px 0\\'>'     + '<tr style=\\'background:#f0f7f4\\'><td><b>Numero de folio</b></td><td><b>' + d.ID_OT + '</b></td></tr>'     + '<tr><td>Consulta</td><td>' + d.Asunto_Pedido + '</td></tr>'     + '</table>'     + '<p>Cualquier duda escribenos a <a href=\\'mailto:secretarias@laimprentaverde.cl\\'>secretarias@laimprentaverde.cl</a>.</p>'     + '<p>Gracias por preferirnos!</p>'     + '<hr style=\\'border:none;border-top:1px solid #eee;margin:16px 0\\'>'     + '<p style=\\'color:#888;font-size:12px\\'>La Imprenta Verde | pedidos@laimprentaverde.cl | Mensaje automatico.</p>'     + '</div>'; } else {   asuntoCliente = 'Consulta recibida - Folio ' + d.ID_OT + ' | La Imprenta Verde';   mensajeCliente =     '<div style=\\'font-family:Arial,sans-serif;max-width:600px\\'>'     + '<p>Hola <b>' + d.Cliente + '</b>!</p>'     + '<p>Recibimos tu consulta y ya esta registrada en nuestro sistema. Nuestro encargado la va a revisar y te va a contactar a la brevedad con la cotizacion y los plazos de entrega.</p>'     + '<table border=\\'1\\' cellpadding=\\'8\\' cellspacing=\\'0\\' style=\\'border-collapse:collapse;width:100%;margin:16px 0\\'>'     + '<tr style=\\'background:#f0f7f4\\'><td><b>Numero de folio</b></td><td><b>' + d.ID_OT + '</b></td></tr>'     + '<tr><td>Descripcion</td><td>' + d.Asunto_Pedido + '</td></tr>'     + '</table>'     + '<p>Cualquier duda escribenos a <a href=\\'mailto:secretarias@laimprentaverde.cl\\'>secretarias@laimprentaverde.cl</a>.</p>'     + '<p>Gracias por contactarnos!</p>'     + '<hr style=\\'border:none;border-top:1px solid #eee;margin:16px 0\\'>'     + '<p style=\\'color:#888;font-size:12px\\'>La Imprenta Verde | pedidos@laimprentaverde.cl | Mensaje automatico.</p>'     + '</div>'; } return [{json:{...d, asuntoCliente: asuntoCliente, mensajeCliente: mensajeCliente}}];"
+      }
+    },
+    {
+      "id": "n3e",
+      "name": "Leer lista de precios Merchandising",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        1120,
+        250
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets - La Imprenta Verde"
+        }
+      },
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Lista de Precios Merchandising",
+          "mode": "name"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n3-merge",
+      "name": "Combinar email con precios",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        1400,
+        250
+      ],
+      "parameters": {
+        "mode": "append"
+      }
+    },
+    {
+      "id": "n3f",
+      "name": "Calcular precios y generar cotizacion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        250
+      ],
+      "parameters": {
+        "jsCode": "const todos = $input.all(); const emailItem = todos.find(function(i) { return i.json.LineaNegocio !== undefined; }); const precios = todos.filter(function(i) { return i.json.Keywords !== undefined; }); const eD = emailItem ? emailItem.json : $('Preparar cotizacion Merchandising').first().json; const texto = ((eD.Asunto_Pedido || '') + ' ' + (eD.Cuerpo_Correo || '')).toLowerCase(); function numCerca(txt, kw) {   const re = new RegExp('(\\\\d{1,5})\\\\s*' + kw + '|' + kw + '\\\\s*(\\\\d{1,5})', 'i');   const m = txt.match(re);   if (m) return parseInt(m[1] || m[2]);   const nums = txt.match(/\\d{2,5}/g);   return nums ? parseInt(nums[0]) : 1; } const matches = []; const usados = {}; for (let pi = 0; pi < precios.length; pi++) {   const pj = precios[pi].json;   const kws = (pj.Keywords || '').toLowerCase().split(',');   for (let ki = 0; ki < kws.length; ki++) {     const kw = kws[ki].trim();     if (!kw || usados[pj.Producto]) continue;     if (texto.indexOf(kw) >= 0) {       usados[pj.Producto] = true;       const cnt = numCerca(texto, kw);       const pu = parseFloat(String(pj.Precio_Unitario_Neto || '0').replace(/\\./g,'').replace(',','.')) || 0;       matches.push({ producto: pj.Producto || kw.toUpperCase(), cantidad: cnt, valorUnit: pu, subtotal: cnt * pu, tiempo: pj.Tiempo_Produccion || '3-5 dias habiles' });       break;     }   } } const encontrado = matches.length > 0; const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']; const now = new Date(); const fechaF = eD.Fecha_Formal || ('Santiago, ' + now.getDate() + ' de ' + meses[now.getMonth()] + ' de ' + now.getFullYear()); const plazo = encontrado ? matches[0].tiempo : '3-5 dias habiles'; let filas = ''; let subG = 0; for (let mi = 0; mi < matches.length; mi++) {   const m = matches[mi]; subG += m.subtotal;   filas += '<tr>'     + '<td style=\\'padding:8px;border:1px solid #ccc\\'>' + m.producto + '</td>'     + '<td style=\\'padding:8px;border:1px solid #ccc;text-align:right\\'>' + m.cantidad + '</td>'     + '<td style=\\'padding:8px;border:1px solid #ccc;text-align:right\\'>$' + m.valorUnit.toLocaleString('es-CL') + '</td>'     + '</tr>'; } const iva = Math.round(subG * 0.19); const total = subG + iva; let htmlCotiz = ''; if (encontrado) {   htmlCotiz =     '<div style=\\'font-family:Arial,sans-serif;max-width:700px;padding:20px\\'>'     + '<table width=\\'100%\\' cellpadding=\\'0\\' cellspacing=\\'0\\' style=\\'margin-bottom:20px\\'><tr>'     + '<td><strong style=\\'font-size:22px;color:#2c5f8a\\'>imprenta</strong><strong style=\\'font-size:22px;color:#e63946\\'>mmg</strong><br><small style=\\'color:#666;letter-spacing:2px\\'>DIGITAL &amp; OFFSET</small></td>'     + '<td align=\\'right\\' style=\\'font-size:13px;color:#333;vertical-align:top\\'>' + fechaF + '</td>'     + '</tr></table>'     + '<h2 style=\\'color:#1a3a5c;text-decoration:underline\\'>COTIZACION IMPRENTA MMG # ' + eD.N_Cotiz + '</h2>'     + '<p><strong>Sres.:</strong><br><strong>' + eD.Cliente + '</strong><br>At: ' + eD.Atencion + '<br><u>PRESENTE</u></p>'     + '<p>Junto con saludarle, tenemos el agrado de hacerle llegar un presupuesto por los siguientes conceptos:</p>'     + '<table cellpadding=\\'0\\' cellspacing=\\'0\\' style=\\'border-collapse:collapse;width:100%;margin:16px 0\\'>'     + '<tr style=\\'background:#e8e8e8\\'>'     + '<td style=\\'padding:8px;border:1px solid #ccc\\'><strong>Elementos</strong></td>'     + '<td style=\\'padding:8px;border:1px solid #ccc;text-align:right\\'><strong>Cantidades</strong></td>'     + '<td style=\\'padding:8px;border:1px solid #ccc;text-align:right\\'><strong>Valor unitario neto</strong></td>'     + '</tr>'     + filas     + '<tr style=\\'background:#f0f0f0\\'>'     + '<td colspan=\\'2\\' style=\\'padding:8px;border:1px solid #ccc\\'><strong>Subtotal neto</strong></td>'     + '<td style=\\'padding:8px;border:1px solid #ccc;text-align:right\\'><strong>$' + subG.toLocaleString('es-CL') + '</strong></td>'     + '</tr>'     + '<tr>'     + '<td colspan=\\'2\\' style=\\'padding:8px;border:1px solid #ccc\\'>IVA (19%)</td>'     + '<td style=\\'padding:8px;border:1px solid #ccc;text-align:right\\'>$' + iva.toLocaleString('es-CL') + '</td>'     + '</tr>'     + '<tr style=\\'background:#d0e4f5\\'>'     + '<td colspan=\\'2\\' style=\\'padding:8px;border:1px solid #ccc\\'><strong>TOTAL</strong></td>'     + '<td style=\\'padding:8px;border:1px solid #ccc;text-align:right\\'><strong>$' + total.toLocaleString('es-CL') + '</strong></td>'     + '</tr></table>'     + '<p style=\\'color:#1a3a5c\\'>'     + '<strong>TIEMPO DE PRODUCCION TOTAL: ' + plazo + '</strong><br>'     + '<strong>IMPRENTA MMG SA / RUT: 76.281.107-3</strong><br>'     + '<strong>Cuenta corriente: Banco de Chile N°174-06098-10 / imprentammg@gmail.com</strong><br>'     + '<strong>Manuel Antonio Tocornal 1912, Santiago / Fono: 225548531 / 225518212 / 225251468</strong>'     + '</p>'     + '<br><table width=\\'100%\\'><tr><td align=\\'center\\' style=\\'color:#555;padding-top:30px;font-size:13px\\'>'     + 'Marta Silva Morales<br>IMPRENTA MMG'     + '</td></tr></table>'     + '<hr style=\\'margin:20px 0;border:none;border-top:1px solid #ccc\\'>'     + '<p style=\\'font-size:11px;color:#777\\'>Dirección M.A. Tocornal 1912 – Santiago- teléfonos: 25548531 – 25518212 – 99 8188987 &nbsp;&nbsp; E-mail: imprentammg@gmail.com</p>'     + '</div>'; } const out = Object.assign({}, eD, { cotizacion_automatica: encontrado, htmlCotizacion: htmlCotiz, Plazo_Produccion: plazo }); if (encontrado) {   out.Estado_Cotiz = 'Generada automaticamente';   out.Subtotal_General = subG; out.IVA_19 = iva; out.Total = total;   if (matches[0]) { out.Producto_1=matches[0].producto; out.Cantidad_1=matches[0].cantidad; out.ValorUnit_1=matches[0].valorUnit; out.Subtotal_1=matches[0].subtotal; }   if (matches[1]) { out.Producto_2=matches[1].producto; out.Cantidad_2=matches[1].cantidad; out.ValorUnit_2=matches[1].valorUnit; out.Subtotal_2=matches[1].subtotal; }   if (matches[2]) { out.Producto_3=matches[2].producto; out.Cantidad_3=matches[2].cantidad; out.ValorUnit_3=matches[2].valorUnit; out.Subtotal_3=matches[2].subtotal; }   if (matches[3]) { out.Producto_4=matches[3].producto; out.Cantidad_4=matches[3].cantidad; out.ValorUnit_4=matches[3].valorUnit; out.Subtotal_4=matches[3].subtotal; }   if (matches[4]) { out.Producto_5=matches[4].producto; out.Cantidad_5=matches[4].cantidad; out.ValorUnit_5=matches[4].valorUnit; out.Subtotal_5=matches[4].subtotal; } } return [{json: out}];"
       }
     }
   ],
@@ -1650,7 +1706,12 @@
       "main": [
         [
           {
-            "node": "Registrar cotizacion en Sheets",
+            "node": "Leer lista de precios Merchandising",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Combinar email con precios",
             "type": "main",
             "index": 0
           }
@@ -1699,6 +1760,39 @@
           }
         ]
       ]
+    },
+    "Leer lista de precios Merchandising": {
+      "main": [
+        [
+          {
+            "node": "Combinar email con precios",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Combinar email con precios": {
+      "main": [
+        [
+          {
+            "node": "Calcular precios y generar cotizacion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcular precios y generar cotizacion": {
+      "main": [
+        [
+          {
+            "node": "Registrar cotizacion en Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "pinData": {},
@@ -1715,6 +1809,6 @@
     }
   ],
   "triggerCount": 3,
-  "updatedAt": "2026-06-07T06:00:00.000Z",
+  "updatedAt": "2026-06-07T08:00:00.000Z",
   "versionId": "1"
 }
