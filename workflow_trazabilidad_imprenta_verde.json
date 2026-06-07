@@ -406,7 +406,7 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        1680,
+        1960,
         -80
       ],
       "credentials": {
@@ -429,7 +429,7 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        1680,
+        1960,
         0
       ],
       "credentials": {
@@ -440,9 +440,9 @@
       },
       "parameters": {
         "sendTo": "={{ $json.Email_Cliente }}",
-        "subject": "=Recibimos tu pedido — Folio {{ $json.ID_OT }} | La Imprenta Verde",
+        "subject": "={{ $json.asuntoCliente }}",
         "emailType": "html",
-        "message": "=<div style='font-family:Arial,sans-serif;max-width:600px'><h2 style='color:#2d6a4f'>Hola {{ $json.Cliente }}, recibimos tu pedido!</h2><p>Muchas gracias por escribirnos. Ya tenemos tu solicitud registrada y nuestro equipo se va a poner en marcha de inmediato.</p><table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;width:100%;margin:16px 0'><tr style='background:#f0f7f4'><td><b>Numero de folio</b></td><td><b>{{ $json.ID_OT }}</b></td></tr><tr><td>Descripcion</td><td>{{ $json.Asunto_Pedido }}</td></tr><tr><td>Fecha estimada de entrega</td><td><b>{{ $json.Fecha_Entrega_Estimada }}</b></td></tr></table><p>Guarda tu numero de folio, te va a servir para hacer seguimiento de tu pedido.</p><p>Cualquier duda, escribenos a <a href='mailto:secretarias@laimprentaverde.cl' style='color:#2d6a4f'>secretarias@laimprentaverde.cl</a> y te ayudamos con gusto.</p><p>Gracias por confiar en nosotros, trabajamos con dedicacion para que tu pedido quede perfecto.</p><hr style='border:none;border-top:1px solid #eee;margin:16px 0'><p style='color:#888;font-size:12px'>La Imprenta Verde | pedidos@laimprentaverde.cl | Mensaje automatico.</p></div>",
+        "message": "={{ $json.mensajeCliente }}",
         "options": {}
       }
     },
@@ -452,7 +452,7 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        1680,
+        1960,
         80
       ],
       "credentials": {
@@ -968,7 +968,7 @@
         200
       ],
       "parameters": {
-        "jsCode": "const item = $input.first(); const d = item.json; const now = new Date(); const pad = (n) => String(n).padStart(2, '0'); const dateStr = now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()); const sec = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds(); const seqCot = String((sec + 500) % 1000).padStart(3, '0'); const idCotiz = 'COT-' + dateStr + '-' + seqCot; return [{json:{...d,ID_Cotiz:idCotiz,Descripcion_Producto:d.Asunto_Pedido,Cantidad_Est:0,Precio_Unitario_Est:0,Subtotal_Est:0,IVA_Est:0,Total_Est:0,Estado_Cotiz:'Pendiente revision',Notas_Cotiz:'Generada automaticamente - revisar y completar antes de enviar'}}];"
+        "jsCode": "const item = $input.first(); const d = item.json; const now = new Date(); const pad = (n) => String(n).padStart(2, '0'); const dateStr = now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()); const sec = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds(); const seqCot = String((sec + 500) % 1000).padStart(3, '0'); const idCotiz = 'COT-' + dateStr + '-' + seqCot; const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']; const fechaFormal = 'Santiago, ' + now.getDate() + ' de ' + meses[now.getMonth()] + ' de ' + now.getFullYear(); const cuerpo = (d.Cuerpo_Correo || '').slice(0, 300); const descProyecto = d.Asunto_Pedido + (cuerpo ? ' | ' + cuerpo : ''); return [{json:{...d,N_Cotiz:idCotiz,ID_Cotiz:idCotiz,Fecha_Formal:fechaFormal,Atencion:d.Cliente,Descripcion_Proyecto:descProyecto,Producto_1:'',Cantidad_1:0,ValorUnit_1:0,Subtotal_1:0,Producto_2:'',Cantidad_2:0,ValorUnit_2:0,Subtotal_2:0,Producto_3:'',Cantidad_3:0,ValorUnit_3:0,Subtotal_3:0,Producto_4:'',Cantidad_4:0,ValorUnit_4:0,Subtotal_4:0,Producto_5:'',Cantidad_5:0,ValorUnit_5:0,Subtotal_5:0,Subtotal_General:0,IVA_19:0,Total:0,Plazo_Produccion:'3-5 dias habiles (confirmar al momento de aprobacion)',Modalidad_Entrega:'Por confirmar (Despacho / Retiro)',Estado_Cotiz:'Pendiente revision',Notas_Cotiz:'Generada automaticamente - completar precios antes de enviar'}}];"
       }
     },
     {
@@ -1001,26 +1001,47 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "ID_Cotiz": "={{ $json.ID_Cotiz }}",
+            "N_Cotiz": "={{ $json.N_Cotiz }}",
             "ID_OT": "={{ $json.ID_OT }}",
-            "Fecha": "={{ $json.Fecha_Ingreso }}",
+            "Fecha_Formal": "={{ $json.Fecha_Formal }}",
             "Cliente": "={{ $json.Cliente }}",
+            "Atencion": "={{ $json.Atencion }}",
             "Email_Cliente": "={{ $json.Email_Cliente }}",
-            "Descripcion_Producto": "={{ $json.Descripcion_Producto }}",
-            "Cantidad_Est": "={{ $json.Cantidad_Est }}",
-            "Precio_Unitario_Est": "={{ $json.Precio_Unitario_Est }}",
-            "Subtotal_Est": "={{ $json.Subtotal_Est }}",
-            "IVA_Est": "={{ $json.IVA_Est }}",
-            "Total_Est": "={{ $json.Total_Est }}",
+            "Descripcion_Proyecto": "={{ $json.Descripcion_Proyecto }}",
+            "Producto_1": "={{ $json.Producto_1 }}",
+            "Cantidad_1": "={{ $json.Cantidad_1 }}",
+            "ValorUnit_1": "={{ $json.ValorUnit_1 }}",
+            "Subtotal_1": "={{ $json.Subtotal_1 }}",
+            "Producto_2": "={{ $json.Producto_2 }}",
+            "Cantidad_2": "={{ $json.Cantidad_2 }}",
+            "ValorUnit_2": "={{ $json.ValorUnit_2 }}",
+            "Subtotal_2": "={{ $json.Subtotal_2 }}",
+            "Producto_3": "={{ $json.Producto_3 }}",
+            "Cantidad_3": "={{ $json.Cantidad_3 }}",
+            "ValorUnit_3": "={{ $json.ValorUnit_3 }}",
+            "Subtotal_3": "={{ $json.Subtotal_3 }}",
+            "Producto_4": "={{ $json.Producto_4 }}",
+            "Cantidad_4": "={{ $json.Cantidad_4 }}",
+            "ValorUnit_4": "={{ $json.ValorUnit_4 }}",
+            "Subtotal_4": "={{ $json.Subtotal_4 }}",
+            "Producto_5": "={{ $json.Producto_5 }}",
+            "Cantidad_5": "={{ $json.Cantidad_5 }}",
+            "ValorUnit_5": "={{ $json.ValorUnit_5 }}",
+            "Subtotal_5": "={{ $json.Subtotal_5 }}",
+            "Subtotal_General": "={{ $json.Subtotal_General }}",
+            "IVA_19": "={{ $json.IVA_19 }}",
+            "Total": "={{ $json.Total }}",
+            "Plazo_Produccion": "={{ $json.Plazo_Produccion }}",
+            "Modalidad_Entrega": "={{ $json.Modalidad_Entrega }}",
             "Estado_Cotiz": "={{ $json.Estado_Cotiz }}",
             "Notas_Cotiz": "={{ $json.Notas_Cotiz }}"
           },
           "schema": [
             {
-              "id": "ID_Cotiz",
-              "displayName": "ID_Cotiz",
+              "id": "N_Cotiz",
+              "displayName": "N_Cotiz",
               "required": false,
-              "defaultMatch": false,
+              "defaultMatch": true,
               "canBeUsedToMatch": true,
               "display": true,
               "type": "string"
@@ -1029,14 +1050,14 @@
               "id": "ID_OT",
               "displayName": "ID_OT",
               "required": false,
-              "defaultMatch": false,
+              "defaultMatch": true,
               "canBeUsedToMatch": true,
               "display": true,
               "type": "string"
             },
             {
-              "id": "Fecha",
-              "displayName": "Fecha",
+              "id": "Fecha_Formal",
+              "displayName": "Fecha_Formal",
               "required": false,
               "defaultMatch": false,
               "canBeUsedToMatch": false,
@@ -1053,6 +1074,15 @@
               "type": "string"
             },
             {
+              "id": "Atencion",
+              "displayName": "Atencion",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
               "id": "Email_Cliente",
               "displayName": "Email_Cliente",
               "required": false,
@@ -1062,8 +1092,8 @@
               "type": "string"
             },
             {
-              "id": "Descripcion_Producto",
-              "displayName": "Descripcion_Producto",
+              "id": "Descripcion_Proyecto",
+              "displayName": "Descripcion_Proyecto",
               "required": false,
               "defaultMatch": false,
               "canBeUsedToMatch": false,
@@ -1071,8 +1101,53 @@
               "type": "string"
             },
             {
-              "id": "Cantidad_Est",
-              "displayName": "Cantidad_Est",
+              "id": "Producto_1",
+              "displayName": "Producto_1",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Producto_2",
+              "displayName": "Producto_2",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Producto_3",
+              "displayName": "Producto_3",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Producto_4",
+              "displayName": "Producto_4",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Producto_5",
+              "displayName": "Producto_5",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Cantidad_1",
+              "displayName": "Cantidad_1",
               "required": false,
               "defaultMatch": false,
               "canBeUsedToMatch": false,
@@ -1080,8 +1155,8 @@
               "type": "number"
             },
             {
-              "id": "Precio_Unitario_Est",
-              "displayName": "Precio_Unitario_Est",
+              "id": "Cantidad_2",
+              "displayName": "Cantidad_2",
               "required": false,
               "defaultMatch": false,
               "canBeUsedToMatch": false,
@@ -1089,8 +1164,8 @@
               "type": "number"
             },
             {
-              "id": "Subtotal_Est",
-              "displayName": "Subtotal_Est",
+              "id": "Cantidad_3",
+              "displayName": "Cantidad_3",
               "required": false,
               "defaultMatch": false,
               "canBeUsedToMatch": false,
@@ -1098,8 +1173,8 @@
               "type": "number"
             },
             {
-              "id": "IVA_Est",
-              "displayName": "IVA_Est",
+              "id": "Cantidad_4",
+              "displayName": "Cantidad_4",
               "required": false,
               "defaultMatch": false,
               "canBeUsedToMatch": false,
@@ -1107,13 +1182,148 @@
               "type": "number"
             },
             {
-              "id": "Total_Est",
-              "displayName": "Total_Est",
+              "id": "Cantidad_5",
+              "displayName": "Cantidad_5",
               "required": false,
               "defaultMatch": false,
               "canBeUsedToMatch": false,
               "display": true,
               "type": "number"
+            },
+            {
+              "id": "ValorUnit_1",
+              "displayName": "ValorUnit_1",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "number"
+            },
+            {
+              "id": "ValorUnit_2",
+              "displayName": "ValorUnit_2",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "number"
+            },
+            {
+              "id": "ValorUnit_3",
+              "displayName": "ValorUnit_3",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "number"
+            },
+            {
+              "id": "ValorUnit_4",
+              "displayName": "ValorUnit_4",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "number"
+            },
+            {
+              "id": "ValorUnit_5",
+              "displayName": "ValorUnit_5",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "number"
+            },
+            {
+              "id": "Subtotal_1",
+              "displayName": "Subtotal_1",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "number"
+            },
+            {
+              "id": "Subtotal_2",
+              "displayName": "Subtotal_2",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "number"
+            },
+            {
+              "id": "Subtotal_3",
+              "displayName": "Subtotal_3",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "number"
+            },
+            {
+              "id": "Subtotal_4",
+              "displayName": "Subtotal_4",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "number"
+            },
+            {
+              "id": "Subtotal_5",
+              "displayName": "Subtotal_5",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "number"
+            },
+            {
+              "id": "Subtotal_General",
+              "displayName": "Subtotal_General",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "number"
+            },
+            {
+              "id": "IVA_19",
+              "displayName": "IVA_19",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "number"
+            },
+            {
+              "id": "Total",
+              "displayName": "Total",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "number"
+            },
+            {
+              "id": "Plazo_Produccion",
+              "displayName": "Plazo_Produccion",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Modalidad_Entrega",
+              "displayName": "Modalidad_Entrega",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
             },
             {
               "id": "Estado_Cotiz",
@@ -1181,6 +1391,19 @@
         "httpMethod": "POST",
         "path": "whatsapp-pedidos",
         "options": {}
+      }
+    },
+    {
+      "id": "n4-prep",
+      "name": "Preparar notificacion cliente",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const d = $input.first().json; const esMerch = d.LineaNegocio === 'Merchandising'; const asuntoCliente = esMerch   ? 'Consulta recibida - Folio ' + d.ID_OT + ' | La Imprenta Verde'   : 'Pedido recibido - Folio ' + d.ID_OT + ' | La Imprenta Verde'; let mensajeCliente; if (esMerch) {   mensajeCliente =     '<div style=\\'font-family:Arial,sans-serif;max-width:600px\\'>' +     '<p>Hola <b>' + d.Cliente + '</b>!</p>' +     '<p>Recibimos tu consulta y ya quedo registrada. Estamos revisando los detalles y te enviamos la cotizacion formal a la brevedad.</p>' +     '<table border=\\'1\\' cellpadding=\\'8\\' cellspacing=\\'0\\' style=\\'border-collapse:collapse;width:100%;margin:16px 0\\'>' +     '<tr style=\\'background:#f0f7f4\\'><td><b>Numero de folio</b></td><td><b>' + d.ID_OT + '</b></td></tr>' +     '<tr><td>Consulta</td><td>' + d.Asunto_Pedido + '</td></tr>' +     '</table>' +     '<p>Cualquier duda escribenos a <a href=\\'mailto:secretarias@laimprentaverde.cl\\'>secretarias@laimprentaverde.cl</a>.</p>' +     '<p>Gracias por preferirnos!</p>' +     '<hr style=\\'border:none;border-top:1px solid #eee;margin:16px 0\\'>' +     '<p style=\\'color:#888;font-size:12px\\'>La Imprenta Verde | pedidos@laimprentaverde.cl | Mensaje automatico.</p>' +     '</div>'; } else {   mensajeCliente =     '<div style=\\'font-family:Arial,sans-serif;max-width:600px\\'>' +     '<h2 style=\\'color:#2d6a4f\\'>Hola ' + d.Cliente + ', recibimos tu pedido!</h2>' +     '<p>Muchas gracias por escribirnos. Ya tenemos tu solicitud registrada y nuestro equipo se va a poner en marcha de inmediato.</p>' +     '<table border=\\'1\\' cellpadding=\\'8\\' cellspacing=\\'0\\' style=\\'border-collapse:collapse;width:100%;margin:16px 0\\'>' +     '<tr style=\\'background:#f0f7f4\\'><td><b>Numero de folio</b></td><td><b>' + d.ID_OT + '</b></td></tr>' +     '<tr><td>Descripcion</td><td>' + d.Asunto_Pedido + '</td></tr>' +     '<tr><td>Fecha estimada de entrega</td><td><b>' + d.Fecha_Entrega_Estimada + '</b></td></tr>' +     '</table>' +     '<p>Guarda tu numero de folio, te va a servir para hacer seguimiento.</p>' +     '<p>Cualquier duda escribenos a <a href=\\'mailto:secretarias@laimprentaverde.cl\\'>secretarias@laimprentaverde.cl</a>.</p>' +     '<p>Gracias por confiar en nosotros, trabajamos con dedicacion para que tu pedido quede perfecto.</p>' +     '<hr style=\\'border:none;border-top:1px solid #eee;margin:16px 0\\'>' +     '<p style=\\'color:#888;font-size:12px\\'>La Imprenta Verde | pedidos@laimprentaverde.cl | Mensaje automatico.</p>' +     '</div>'; } return [{json:{...d, asuntoCliente: asuntoCliente, mensajeCliente: mensajeCliente}}];"
       }
     }
   ],
@@ -1250,17 +1473,7 @@
       "main": [
         [
           {
-            "node": "Notificar al disenador asignado",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Confirmar recepcion al cliente",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Notificar a secretarias nuevo pedido",
+            "node": "Preparar notificacion cliente",
             "type": "main",
             "index": 0
           }
@@ -1465,6 +1678,27 @@
           }
         ]
       ]
+    },
+    "Preparar notificacion cliente": {
+      "main": [
+        [
+          {
+            "node": "Notificar al disenador asignado",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Confirmar recepcion al cliente",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Notificar a secretarias nuevo pedido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "pinData": {},
@@ -1481,6 +1715,6 @@
     }
   ],
   "triggerCount": 3,
-  "updatedAt": "2026-06-07T00:00:00.000Z",
+  "updatedAt": "2026-06-07T06:00:00.000Z",
   "versionId": "1"
 }
