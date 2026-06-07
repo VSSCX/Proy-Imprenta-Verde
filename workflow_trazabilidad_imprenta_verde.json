@@ -6,9 +6,12 @@
       "name": "Sticky - Carril 1",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [-200, 0],
+      "position": [
+        -200,
+        0
+      ],
       "parameters": {
-        "content": "## CARRIL 1 — Pedido nuevo\nSe activa con cada correo nuevo. Clasifica el tipo de producto, registra la OT en Sheets y notifica al disenador, cliente y secretarias.",
+        "content": "## CARRIL 1 — Pedido nuevo\nSe activa con cada correo nuevo. Detecta la linea de negocio (Merchandising o Papeleria), registra la OT en Sheets, genera una pre-cotizacion automatica en la hoja 'Cotizaciones Merchandising' para pedidos de esta linea, y notifica al disenador, cliente y secretarias.",
         "height": 160,
         "width": 400,
         "color": 4
@@ -19,7 +22,10 @@
       "name": "Sticky - Carril 2",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [-200, 400],
+      "position": [
+        -200,
+        400
+      ],
       "parameters": {
         "content": "## CARRIL 2 — Modificacion\nSe activa cuando alguien edita una fila en el Sheets. Registra el historial del cambio y notifica a los afectados. La columna _Sistema_Flag evita bucles infinitos.",
         "height": 160,
@@ -32,7 +38,10 @@
       "name": "Sticky - Carril 3",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [-200, 750],
+      "position": [
+        -200,
+        750
+      ],
       "parameters": {
         "content": "## CARRIL 3 — Control externo\nCorre automaticamente cada manana a las 9 AM (lunes a viernes). Detecta pedidos que debian haber vuelto del proveedor externo y no lo hicieron, y alerta al equipo.",
         "height": 160,
@@ -45,7 +54,10 @@
       "name": "Correo nuevo - pedido entrante",
       "type": "n8n-nodes-base.gmailTrigger",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "credentials": {
         "gmailOAuth2": {
           "id": "YOUR_GMAIL_CREDENTIAL_ID",
@@ -54,7 +66,11 @@
       },
       "parameters": {
         "pollTimes": {
-          "item": [{ "mode": "everyMinute" }]
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
         },
         "filters": {
           "q": "subject:(cotizacion OR pedido OR orden OR solicitud) is:unread"
@@ -67,9 +83,12 @@
       "name": "Parsear correo y generar ID OT",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [280, 0],
+      "position": [
+        280,
+        0
+      ],
       "parameters": {
-        "jsCode": "const item = $input.first(); const d = item.json; const now = new Date(); const pad = (n) => String(n).padStart(2, '0'); const dateStr = now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()); const sec = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds(); const seq = String(sec % 1000).padStart(3, '0'); const idOT = 'OT-' + dateStr + '-' + seq; const from = d.from || ''; const ai = from.indexOf('<'); const emailCliente = ai >= 0 ? from.slice(ai+1, from.indexOf('>', ai)) : from; const nombre = (ai >= 0 ? from.slice(0, ai) : emailCliente.split('@')[0]).trim() || 'Cliente'; const asuntoRaw = d.subject || 'Sin asunto'; const asunto = asuntoRaw.toLowerCase(); const addBiz = (dt, n) => { const r = new Date(dt); let a=0; while(a<n){r.setDate(r.getDate()+1);const w=r.getDay();if(w!==0&&w!==6)a++;} return r; }; const fe = addBiz(now,2).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'}); let area = 'Sin Asignar'; let disenador = 'disenador1@laimprentaverde.cl'; if (asunto.match('polera|camiseta|ropa|polo|buzo|chaleco|bordado')) { area='Ropa'; disenador='ropa@laimprentaverde.cl'; } else if (asunto.match('cuaderno|agenda|anillado|espiral|bloc|libreta')) { area='Libreria'; disenador='libreria@laimprentaverde.cl'; } else if (asunto.match('plastificado|laminado|carpeta|oficio|polimate')) { area='Plastificados'; disenador='plastificados@laimprentaverde.cl'; } else if (asunto.match('taza|lapiz|lapicera|pendrive|gift|regalo|mochila')) { area='Merchandising'; disenador='merchandising@laimprentaverde.cl'; } return [{json:{ID_OT:idOT,Fecha_Ingreso:now.toISOString(),Cliente:nombre,Email_Cliente:emailCliente,Asunto_Pedido:asuntoRaw,Cuerpo_Correo:d.text||d.snippet||'',Area:area,Disenador_Asignado:disenador,Estado:'Recibido',Fecha_Entrega_Estimada:fe,Va_A_Externo:'No',Proveedor_Externo:'',Fecha_Limite_Retorno:'',Fecha_Retorno_Real:'',Modalidad_Despacho:'',Notas:'',Fecha_Cierre:'',_Sistema_Flag:''}}];"
+        "jsCode": "const item = $input.first(); const d = item.json; const now = new Date(); const pad = (n) => String(n).padStart(2, '0'); const dateStr = now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()); const sec = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds(); const seq = String(sec % 1000).padStart(3, '0'); const idOT = 'OT-' + dateStr + '-' + seq; const from = d.from || ''; const ai = from.indexOf('<'); const emailCliente = ai >= 0 ? from.slice(ai+1, from.indexOf('>', ai)) : from; const nombre = (ai >= 0 ? from.slice(0, ai) : emailCliente.split('@')[0]).trim() || 'Cliente'; const asuntoRaw = d.subject || 'Sin asunto'; const asunto = asuntoRaw.toLowerCase(); const addBiz = (dt, n) => { const r = new Date(dt); let a=0; while(a<n){r.setDate(r.getDate()+1);const w=r.getDay();if(w!==0&&w!==6)a++;} return r; }; const fe = addBiz(now,2).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'}); let area = 'Sin Asignar'; let disenador = 'disenador1@laimprentaverde.cl'; let lineaNegocio = 'Papeleria'; if (asunto.match('polera|camiseta|ropa|polo|buzo|chaleco|bordado')) { area='Ropa'; disenador='ropa@laimprentaverde.cl'; } else if (asunto.match('cuaderno|agenda|anillado|espiral|bloc|libreta')) { area='Libreria'; disenador='libreria@laimprentaverde.cl'; } else if (asunto.match('plastificado|laminado|carpeta|oficio|polimate')) { area='Plastificados'; disenador='plastificados@laimprentaverde.cl'; } else if (asunto.match('taza|lapiz|lapicera|pendrive|gift|regalo|mochila|souvenir|gorro|termos|termo')) { area='Merchandising'; disenador='merchandising@laimprentaverde.cl'; lineaNegocio='Merchandising'; } return [{json:{ID_OT:idOT,Fecha_Ingreso:now.toISOString(),Cliente:nombre,Email_Cliente:emailCliente,Asunto_Pedido:asuntoRaw,Cuerpo_Correo:d.text||d.snippet||'',Area:area,Disenador_Asignado:disenador,Estado:'Recibido',Fecha_Entrega_Estimada:fe,LineaNegocio:lineaNegocio,Va_A_Externo:'No',Proveedor_Externo:'',Fecha_Limite_Retorno:'',Fecha_Retorno_Real:'',Modalidad_Despacho:'',Notas:'',Fecha_Cierre:'',_Sistema_Flag:''}}];"
       }
     },
     {
@@ -77,15 +96,30 @@
       "name": "Clasificar area de produccion",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3,
-      "position": [560, 0],
+      "position": [
+        840,
+        -200
+      ],
       "parameters": {
         "mode": "rules",
         "rules": {
           "values": [
             {
               "conditions": {
-                "options": { "caseSensitive": false, "typeValidation": "strict" },
-                "conditions": [{ "leftValue": "={{ $json.Asunto_Pedido }}", "rightValue": "polera|camiseta|ropa|polo|buzo|chaleco|bordado", "operator": { "type": "string", "operation": "regex" } }],
+                "options": {
+                  "caseSensitive": false,
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.Asunto_Pedido }}",
+                    "rightValue": "polera|camiseta|ropa|polo|buzo|chaleco|bordado",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
                 "combinator": "any"
               },
               "renameOutput": true,
@@ -93,8 +127,20 @@
             },
             {
               "conditions": {
-                "options": { "caseSensitive": false, "typeValidation": "strict" },
-                "conditions": [{ "leftValue": "={{ $json.Asunto_Pedido }}", "rightValue": "cuaderno|agenda|anillado|espiral|bloc|libreta", "operator": { "type": "string", "operation": "regex" } }],
+                "options": {
+                  "caseSensitive": false,
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.Asunto_Pedido }}",
+                    "rightValue": "cuaderno|agenda|anillado|espiral|bloc|libreta",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
                 "combinator": "any"
               },
               "renameOutput": true,
@@ -102,8 +148,20 @@
             },
             {
               "conditions": {
-                "options": { "caseSensitive": false, "typeValidation": "strict" },
-                "conditions": [{ "leftValue": "={{ $json.Asunto_Pedido }}", "rightValue": "plastificado|laminado|carpeta|oficio|polimate", "operator": { "type": "string", "operation": "regex" } }],
+                "options": {
+                  "caseSensitive": false,
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.Asunto_Pedido }}",
+                    "rightValue": "plastificado|laminado|carpeta|oficio|polimate",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
                 "combinator": "any"
               },
               "renameOutput": true,
@@ -111,8 +169,20 @@
             },
             {
               "conditions": {
-                "options": { "caseSensitive": false, "typeValidation": "strict" },
-                "conditions": [{ "leftValue": "={{ $json.Asunto_Pedido }}", "rightValue": "taza|lapiz|lapicera|pendrive|gift|regalo|mochila", "operator": { "type": "string", "operation": "regex" } }],
+                "options": {
+                  "caseSensitive": false,
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.Asunto_Pedido }}",
+                    "rightValue": "taza|lapiz|lapicera|pendrive|gift|regalo|mochila",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
                 "combinator": "any"
               },
               "renameOutput": true,
@@ -128,7 +198,10 @@
       "name": "Registrar OT en Sheets",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
-      "position": [840, 0],
+      "position": [
+        1400,
+        0
+      ],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "YOUR_SHEETS_CREDENTIAL_ID",
@@ -137,8 +210,16 @@
       },
       "parameters": {
         "operation": "append",
-        "documentId": { "__rl": true, "value": "YOUR_SPREADSHEET_ID", "mode": "id" },
-        "sheetName": { "__rl": true, "value": "Ordenes de Taller", "mode": "name" },
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Ordenes de Taller",
+          "mode": "name"
+        },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
@@ -161,23 +242,159 @@
             "_Sistema_Flag": ""
           },
           "schema": [
-            { "id": "ID_OT", "displayName": "ID_OT", "required": false, "defaultMatch": false, "canBeUsedToMatch": true, "display": true, "type": "string" },
-            { "id": "Fecha_Ingreso", "displayName": "Fecha_Ingreso", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
-            { "id": "Cliente", "displayName": "Cliente", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
-            { "id": "Email_Cliente", "displayName": "Email_Cliente", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
-            { "id": "Asunto_Pedido", "displayName": "Asunto_Pedido", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
-            { "id": "Area", "displayName": "Area", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
-            { "id": "Disenador_Asignado", "displayName": "Disenador_Asignado", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
-            { "id": "Estado", "displayName": "Estado", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
-            { "id": "Fecha_Entrega_Estimada", "displayName": "Fecha_Entrega_Estimada", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
-            { "id": "Va_A_Externo", "displayName": "Va_A_Externo", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
-            { "id": "Proveedor_Externo", "displayName": "Proveedor_Externo", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
-            { "id": "Fecha_Limite_Retorno", "displayName": "Fecha_Limite_Retorno", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
-            { "id": "Fecha_Retorno_Real", "displayName": "Fecha_Retorno_Real", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
-            { "id": "Modalidad_Despacho", "displayName": "Modalidad_Despacho", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
-            { "id": "Notas", "displayName": "Notas", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
-            { "id": "Fecha_Cierre", "displayName": "Fecha_Cierre", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
-            { "id": "_Sistema_Flag", "displayName": "_Sistema_Flag", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" }
+            {
+              "id": "ID_OT",
+              "displayName": "ID_OT",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Fecha_Ingreso",
+              "displayName": "Fecha_Ingreso",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Cliente",
+              "displayName": "Cliente",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Email_Cliente",
+              "displayName": "Email_Cliente",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Asunto_Pedido",
+              "displayName": "Asunto_Pedido",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Area",
+              "displayName": "Area",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Disenador_Asignado",
+              "displayName": "Disenador_Asignado",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Fecha_Entrega_Estimada",
+              "displayName": "Fecha_Entrega_Estimada",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Va_A_Externo",
+              "displayName": "Va_A_Externo",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Proveedor_Externo",
+              "displayName": "Proveedor_Externo",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Fecha_Limite_Retorno",
+              "displayName": "Fecha_Limite_Retorno",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Fecha_Retorno_Real",
+              "displayName": "Fecha_Retorno_Real",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Modalidad_Despacho",
+              "displayName": "Modalidad_Despacho",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Notas",
+              "displayName": "Notas",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Fecha_Cierre",
+              "displayName": "Fecha_Cierre",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "_Sistema_Flag",
+              "displayName": "_Sistema_Flag",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            }
           ]
         },
         "options": {}
@@ -188,7 +405,10 @@
       "name": "Notificar al disenador asignado",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
-      "position": [1120, -80],
+      "position": [
+        1680,
+        -80
+      ],
       "credentials": {
         "gmailOAuth2": {
           "id": "YOUR_GMAIL_CREDENTIAL_ID",
@@ -197,9 +417,9 @@
       },
       "parameters": {
         "sendTo": "={{ $json.Disenador_Asignado }}",
-        "subject": "=[{{ $json.ID_OT }}] Nuevo pedido asignado: {{ $json.Asunto_Pedido }}",
+        "subject": "=[{{ $json.ID_OT }}] Nuevo pedido — {{ $json.Area }}",
         "emailType": "html",
-        "message": "=<h2>Nuevo pedido asignado</h2><table border='1' cellpadding='8' cellspacing='0'><tr><td><b>ID OT</b></td><td>{{ $json.ID_OT }}</td></tr><tr><td><b>Cliente</b></td><td>{{ $json.Cliente }}</td></tr><tr><td><b>Pedido</b></td><td>{{ $json.Asunto_Pedido }}</td></tr><tr><td><b>Area</b></td><td>{{ $json.Area }}</td></tr><tr><td><b>Entrega estimada</b></td><td>{{ $json.Fecha_Entrega_Estimada }}</td></tr></table><p><b>Accion requerida:</b> Actualiza la columna Estado en el Sheets cuando inicies y cuando termines este pedido.</p><p><a href='YOUR_SHEETS_URL'>Abrir Google Sheets</a></p><hr><p><small>La Imprenta Verde — Sistema automatico de OT</small></p>",
+        "message": "=<div style='font-family:Arial,sans-serif;max-width:600px'><p>Hola, te llego un pedido nuevo asignado a tu area.</p><table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;width:100%'><tr style='background:#f0f7f4'><td><b>Folio OT</b></td><td><b>{{ $json.ID_OT }}</b></td></tr><tr><td>Cliente</td><td>{{ $json.Cliente }}</td></tr><tr><td>Pedido</td><td>{{ $json.Asunto_Pedido }}</td></tr><tr><td>Area</td><td>{{ $json.Area }}</td></tr><tr><td>Entrega estimada</td><td>{{ $json.Fecha_Entrega_Estimada }}</td></tr></table><p>Recuerda actualizar el estado en el Sheets cuando empieces y cuando termines. Cualquier duda, avisa.</p><p><a href='YOUR_SHEETS_URL' style='color:#2d6a4f'>Ver en Google Sheets</a></p><hr style='border:none;border-top:1px solid #eee;margin:16px 0'><p style='color:#888;font-size:12px'>La Imprenta Verde · Sistema de ordenes de trabajo</p></div>",
         "options": {}
       }
     },
@@ -208,7 +428,10 @@
       "name": "Confirmar recepcion al cliente",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
-      "position": [1120, 0],
+      "position": [
+        1680,
+        0
+      ],
       "credentials": {
         "gmailOAuth2": {
           "id": "YOUR_GMAIL_CREDENTIAL_ID",
@@ -217,9 +440,9 @@
       },
       "parameters": {
         "sendTo": "={{ $json.Email_Cliente }}",
-        "subject": "=Pedido recibido - Folio {{ $json.ID_OT }} | La Imprenta Verde",
+        "subject": "=Recibimos tu pedido — Folio {{ $json.ID_OT }} | La Imprenta Verde",
         "emailType": "html",
-        "message": "=<h2>Hemos recibido tu solicitud</h2><p>Estimado/a <b>{{ $json.Cliente }}</b>,</p><p>Confirmamos la recepcion de tu pedido. A continuacion los detalles:</p><table border='1' cellpadding='8' cellspacing='0'><tr><td><b>Numero de folio</b></td><td><b>{{ $json.ID_OT }}</b></td></tr><tr><td><b>Descripcion</b></td><td>{{ $json.Asunto_Pedido }}</td></tr><tr><td><b>Fecha estimada de entrega</b></td><td>{{ $json.Fecha_Entrega_Estimada }}</td></tr></table><p>Guarda tu numero de folio para hacer seguimiento de tu pedido.</p><p>Para consultas, contacta a nuestras secretarias:<br><b>secretarias@laimprentaverde.cl</b></p><p>Gracias por confiar en La Imprenta Verde. Trabajamos con dedicacion para entregar resultados de excelencia.</p><hr><p><small>La Imprenta Verde | pedidos@laimprentaverde.cl</small></p>",
+        "message": "=<div style='font-family:Arial,sans-serif;max-width:600px'><h2 style='color:#2d6a4f'>Hola {{ $json.Cliente }}, recibimos tu pedido!</h2><p>Muchas gracias por escribirnos. Ya tenemos tu solicitud registrada y nuestro equipo se va a poner en marcha de inmediato.</p><table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;width:100%;margin:16px 0'><tr style='background:#f0f7f4'><td><b>Numero de folio</b></td><td><b>{{ $json.ID_OT }}</b></td></tr><tr><td>Descripcion</td><td>{{ $json.Asunto_Pedido }}</td></tr><tr><td>Fecha estimada de entrega</td><td><b>{{ $json.Fecha_Entrega_Estimada }}</b></td></tr></table><p>Guarda tu numero de folio, te va a servir para hacer seguimiento de tu pedido.</p><p>Cualquier duda, escribenos a <a href='mailto:secretarias@laimprentaverde.cl' style='color:#2d6a4f'>secretarias@laimprentaverde.cl</a> y te ayudamos con gusto.</p><p>Gracias por confiar en nosotros, trabajamos con dedicacion para que tu pedido quede perfecto.</p><hr style='border:none;border-top:1px solid #eee;margin:16px 0'><p style='color:#888;font-size:12px'>La Imprenta Verde | pedidos@laimprentaverde.cl | Mensaje automatico.</p></div>",
         "options": {}
       }
     },
@@ -228,7 +451,10 @@
       "name": "Notificar a secretarias nuevo pedido",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
-      "position": [1120, 80],
+      "position": [
+        1680,
+        80
+      ],
       "credentials": {
         "gmailOAuth2": {
           "id": "YOUR_GMAIL_CREDENTIAL_ID",
@@ -237,9 +463,9 @@
       },
       "parameters": {
         "sendTo": "secretarias@laimprentaverde.cl",
-        "subject": "=[{{ $json.ID_OT }}] Nuevo pedido ingresado — {{ $json.Cliente }}",
+        "subject": "=[{{ $json.ID_OT }}] Pedido ingresado — {{ $json.Cliente }}",
         "emailType": "html",
-        "message": "=<h2>Nuevo pedido ingresado al sistema</h2><table border='1' cellpadding='8' cellspacing='0'><tr><td><b>ID OT</b></td><td>{{ $json.ID_OT }}</td></tr><tr><td><b>Cliente</b></td><td>{{ $json.Cliente }}</td></tr><tr><td><b>Email</b></td><td>{{ $json.Email_Cliente }}</td></tr><tr><td><b>Pedido</b></td><td>{{ $json.Asunto_Pedido }}</td></tr><tr><td><b>Area asignada</b></td><td>{{ $json.Area }}</td></tr><tr><td><b>Disenador</b></td><td>{{ $json.Disenador_Asignado }}</td></tr><tr><td><b>Entrega estimada</b></td><td>{{ $json.Fecha_Entrega_Estimada }}</td></tr><tr><td><b>Estado</b></td><td>{{ $json.Estado }}</td></tr></table><p><a href='YOUR_SHEETS_URL'>Ver en Google Sheets</a></p>",
+        "message": "=<div style='font-family:Arial,sans-serif;max-width:600px'><h3>Nuevo pedido registrado en el sistema</h3><table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;width:100%'><tr style='background:#f5f5f5'><td><b>ID OT</b></td><td><b>{{ $json.ID_OT }}</b></td></tr><tr><td>Cliente</td><td>{{ $json.Cliente }}</td></tr><tr><td>Email cliente</td><td>{{ $json.Email_Cliente }}</td></tr><tr><td>Pedido</td><td>{{ $json.Asunto_Pedido }}</td></tr><tr><td>Area asignada</td><td>{{ $json.Area }}</td></tr><tr><td>Disenador</td><td>{{ $json.Disenador_Asignado }}</td></tr><tr><td>Entrega estimada</td><td>{{ $json.Fecha_Entrega_Estimada }}</td></tr><tr><td>Estado</td><td>{{ $json.Estado }}</td></tr></table><p><a href='YOUR_SHEETS_URL' style='color:#2d6a4f'>Ver en Google Sheets</a></p><hr style='border:none;border-top:1px solid #eee;margin:16px 0'><p style='color:#888;font-size:12px'>La Imprenta Verde · Sistema de ordenes</p></div>",
         "options": {}
       }
     },
@@ -248,7 +474,10 @@
       "name": "Cambio detectado en hoja OT",
       "type": "n8n-nodes-base.googleSheetsTrigger",
       "typeVersion": 1,
-      "position": [0, 400],
+      "position": [
+        0,
+        400
+      ],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "YOUR_SHEETS_CREDENTIAL_ID",
@@ -257,8 +486,16 @@
       },
       "parameters": {
         "event": "anyUpdate",
-        "documentId": { "__rl": true, "value": "YOUR_SPREADSHEET_ID", "mode": "id" },
-        "sheetName": { "__rl": true, "value": "Ordenes de Taller", "mode": "name" },
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Ordenes de Taller",
+          "mode": "name"
+        },
         "options": {}
       }
     },
@@ -267,16 +504,26 @@
       "name": "Cambio humano o del sistema",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [280, 400],
+      "position": [
+        280,
+        400
+      ],
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
           "conditions": [
             {
               "id": "cond-sistema",
               "leftValue": "={{ $json._Sistema_Flag }}",
               "rightValue": "SI",
-              "operator": { "type": "string", "operation": "equals" }
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
           ],
           "combinator": "and"
@@ -288,7 +535,10 @@
       "name": "Evaluar que campo cambio",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [560, 400],
+      "position": [
+        560,
+        400
+      ],
       "parameters": {
         "jsCode": "const item = $input.first(); const d = item.json; const relevantes = ['Estado','Va_A_Externo','Fecha_Entrega_Estimada','Modalidad_Despacho']; let campo = 'Otro'; for (const c of relevantes) { if (d[c] !== undefined && d[c] !== null && d[c] !== '') { campo = c; break; } } const notDisenador = campo === 'Estado' || campo === 'Fecha_Entrega_Estimada'; const notCliente = campo === 'Fecha_Entrega_Estimada'; return [{json:{...d, campo_modificado: campo, notificar_disenador: notDisenador, notificar_cliente: notCliente}}];"
       }
@@ -298,7 +548,10 @@
       "name": "Guardar en historial de cambios",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
-      "position": [840, 400],
+      "position": [
+        840,
+        400
+      ],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "YOUR_SHEETS_CREDENTIAL_ID",
@@ -307,8 +560,16 @@
       },
       "parameters": {
         "operation": "append",
-        "documentId": { "__rl": true, "value": "YOUR_SPREADSHEET_ID", "mode": "id" },
-        "sheetName": { "__rl": true, "value": "Historial de Cambios", "mode": "name" },
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Historial de Cambios",
+          "mode": "name"
+        },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
@@ -320,12 +581,60 @@
             "Notas_Cambio": "=Cambio detectado automaticamente"
           },
           "schema": [
-            { "id": "ID_OT", "displayName": "ID_OT", "required": false, "defaultMatch": false, "canBeUsedToMatch": true, "display": true, "type": "string" },
-            { "id": "Fecha_Cambio", "displayName": "Fecha_Cambio", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
-            { "id": "Campo_Modificado", "displayName": "Campo_Modificado", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
-            { "id": "Valor_Anterior", "displayName": "Valor_Anterior", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
-            { "id": "Valor_Nuevo", "displayName": "Valor_Nuevo", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
-            { "id": "Notas_Cambio", "displayName": "Notas_Cambio", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" }
+            {
+              "id": "ID_OT",
+              "displayName": "ID_OT",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Fecha_Cambio",
+              "displayName": "Fecha_Cambio",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Campo_Modificado",
+              "displayName": "Campo_Modificado",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Valor_Anterior",
+              "displayName": "Valor_Anterior",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Valor_Nuevo",
+              "displayName": "Valor_Nuevo",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Notas_Cambio",
+              "displayName": "Notas_Cambio",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            }
           ]
         },
         "options": {}
@@ -336,16 +645,26 @@
       "name": "Notificar al disenador por cambio",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [1120, 350],
+      "position": [
+        1120,
+        350
+      ],
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
           "conditions": [
             {
               "id": "cond-disenador",
               "leftValue": "={{ $json.notificar_disenador }}",
               "rightValue": true,
-              "operator": { "type": "boolean", "operation": "equals" }
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
             }
           ],
           "combinator": "and"
@@ -357,7 +676,10 @@
       "name": "Avisar cambio al disenador",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
-      "position": [1400, 300],
+      "position": [
+        1400,
+        300
+      ],
       "credentials": {
         "gmailOAuth2": {
           "id": "YOUR_GMAIL_CREDENTIAL_ID",
@@ -366,9 +688,9 @@
       },
       "parameters": {
         "sendTo": "={{ $json.Disenador_Asignado }}",
-        "subject": "=[{{ $json.ID_OT }}] Cambio en pedido: {{ $json.campo_modificado }}",
+        "subject": "=[{{ $json.ID_OT }}] Actualizacion en tu pedido — {{ $json.campo_modificado }}",
         "emailType": "html",
-        "message": "=<h2>Cambio registrado en tu pedido</h2><table border='1' cellpadding='8' cellspacing='0'><tr><td><b>ID OT</b></td><td>{{ $json.ID_OT }}</td></tr><tr><td><b>Cliente</b></td><td>{{ $json.Cliente }}</td></tr><tr><td><b>Campo modificado</b></td><td>{{ $json.campo_modificado }}</td></tr><tr><td><b>Nuevo valor</b></td><td>{{ $json[$json.campo_modificado] }}</td></tr></table><p><a href='YOUR_SHEETS_URL'>Ver en Google Sheets</a></p>",
+        "message": "=<div style='font-family:Arial,sans-serif;max-width:600px'><p>Hola, hay una actualizacion en uno de tus pedidos.</p><table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;width:100%'><tr style='background:#f0f7f4'><td><b>Folio OT</b></td><td><b>{{ $json.ID_OT }}</b></td></tr><tr><td>Cliente</td><td>{{ $json.Cliente }}</td></tr><tr><td>Campo modificado</td><td>{{ $json.campo_modificado }}</td></tr><tr><td>Nuevo valor</td><td><b>{{ $json[$json.campo_modificado] }}</b></td></tr></table><p>Si tienes alguna duda, coordina con secretarias.</p><p><a href='YOUR_SHEETS_URL' style='color:#2d6a4f'>Ver en Google Sheets</a></p><hr style='border:none;border-top:1px solid #eee;margin:16px 0'><p style='color:#888;font-size:12px'>La Imprenta Verde · Sistema de ordenes</p></div>",
         "options": {}
       }
     },
@@ -377,7 +699,10 @@
       "name": "Avisar cambio a secretarias",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
-      "position": [1400, 400],
+      "position": [
+        1400,
+        400
+      ],
       "credentials": {
         "gmailOAuth2": {
           "id": "YOUR_GMAIL_CREDENTIAL_ID",
@@ -386,9 +711,9 @@
       },
       "parameters": {
         "sendTo": "secretarias@laimprentaverde.cl",
-        "subject": "=[{{ $json.ID_OT }}] Pedido modificado — {{ $json.campo_modificado }}",
+        "subject": "=[{{ $json.ID_OT }}] Cambio registrado — {{ $json.campo_modificado }}",
         "emailType": "html",
-        "message": "=<h2>Modificacion detectada en pedido</h2><table border='1' cellpadding='8' cellspacing='0'><tr><td><b>ID OT</b></td><td>{{ $json.ID_OT }}</td></tr><tr><td><b>Cliente</b></td><td>{{ $json.Cliente }}</td></tr><tr><td><b>Campo modificado</b></td><td>{{ $json.campo_modificado }}</td></tr><tr><td><b>Nuevo valor</b></td><td>{{ $json[$json.campo_modificado] }}</td></tr><tr><td><b>Estado actual</b></td><td>{{ $json.Estado }}</td></tr></table><p><a href='YOUR_SHEETS_URL'>Ver en Google Sheets</a></p>",
+        "message": "=<div style='font-family:Arial,sans-serif;max-width:600px'><h3>Modificacion detectada en pedido</h3><table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;width:100%'><tr style='background:#f5f5f5'><td><b>ID OT</b></td><td><b>{{ $json.ID_OT }}</b></td></tr><tr><td>Cliente</td><td>{{ $json.Cliente }}</td></tr><tr><td>Campo modificado</td><td>{{ $json.campo_modificado }}</td></tr><tr><td>Nuevo valor</td><td>{{ $json[$json.campo_modificado] }}</td></tr><tr><td>Estado actual</td><td>{{ $json.Estado }}</td></tr></table><p><a href='YOUR_SHEETS_URL' style='color:#2d6a4f'>Ver en Google Sheets</a></p><hr style='border:none;border-top:1px solid #eee;margin:16px 0'><p style='color:#888;font-size:12px'>La Imprenta Verde · Sistema de ordenes</p></div>",
         "options": {}
       }
     },
@@ -397,16 +722,26 @@
       "name": "Avisar al cliente por cambio de fecha",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [1400, 500],
+      "position": [
+        1400,
+        500
+      ],
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
           "conditions": [
             {
               "id": "cond-cliente",
               "leftValue": "={{ $json.notificar_cliente }}",
               "rightValue": true,
-              "operator": { "type": "boolean", "operation": "equals" }
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
             }
           ],
           "combinator": "and"
@@ -418,7 +753,10 @@
       "name": "Informar nuevo plazo al cliente",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
-      "position": [1680, 500],
+      "position": [
+        1680,
+        500
+      ],
       "credentials": {
         "gmailOAuth2": {
           "id": "YOUR_GMAIL_CREDENTIAL_ID",
@@ -427,9 +765,9 @@
       },
       "parameters": {
         "sendTo": "={{ $json.Email_Cliente }}",
-        "subject": "=Actualizacion de su pedido Folio {{ $json.ID_OT }} | La Imprenta Verde",
+        "subject": "=Actualizacion de tu pedido Folio {{ $json.ID_OT }} | La Imprenta Verde",
         "emailType": "html",
-        "message": "=<h2>Actualizacion de fecha de entrega</h2><p>Estimado/a <b>{{ $json.Cliente }}</b>,</p><p>Le informamos que la fecha estimada de entrega de su pedido ha sido actualizada.</p><table border='1' cellpadding='8' cellspacing='0'><tr><td><b>Folio</b></td><td>{{ $json.ID_OT }}</td></tr><tr><td><b>Pedido</b></td><td>{{ $json.Asunto_Pedido }}</td></tr><tr><td><b>Nueva fecha estimada</b></td><td>{{ $json.Fecha_Entrega_Estimada }}</td></tr></table><p>Lamentamos los inconvenientes. Para consultas: secretarias@laimprentaverde.cl</p><p>Gracias por su comprension.</p><hr><p><small>La Imprenta Verde</small></p>",
+        "message": "=<div style='font-family:Arial,sans-serif;max-width:600px'><h2 style='color:#2d6a4f'>Hola {{ $json.Cliente }}</h2><p>Te escribimos para avisarte que la fecha estimada de entrega de tu pedido fue actualizada.</p><table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;width:100%;margin:16px 0'><tr style='background:#f0f7f4'><td><b>Folio</b></td><td><b>{{ $json.ID_OT }}</b></td></tr><tr><td>Pedido</td><td>{{ $json.Asunto_Pedido }}</td></tr><tr><td>Nueva fecha estimada</td><td><b>{{ $json.Fecha_Entrega_Estimada }}</b></td></tr></table><p>Lamentamos cualquier inconveniente. Estamos trabajando para entregarte el mejor resultado posible.</p><p>Cualquier duda, contactanos en <a href='mailto:secretarias@laimprentaverde.cl' style='color:#2d6a4f'>secretarias@laimprentaverde.cl</a>.</p><p>Gracias por tu confianza y comprension.</p><hr style='border:none;border-top:1px solid #eee;margin:16px 0'><p style='color:#888;font-size:12px'>La Imprenta Verde | pedidos@laimprentaverde.cl</p></div>",
         "options": {}
       }
     },
@@ -438,7 +776,10 @@
       "name": "Revision diaria de externos 9AM",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1,
-      "position": [0, 750],
+      "position": [
+        0,
+        750
+      ],
       "parameters": {
         "triggerTimes": {
           "item": [
@@ -455,7 +796,10 @@
       "name": "Leer OTs en estado Externo",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
-      "position": [280, 750],
+      "position": [
+        280,
+        750
+      ],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "YOUR_SHEETS_CREDENTIAL_ID",
@@ -464,8 +808,16 @@
       },
       "parameters": {
         "operation": "read",
-        "documentId": { "__rl": true, "value": "YOUR_SPREADSHEET_ID", "mode": "id" },
-        "sheetName": { "__rl": true, "value": "Ordenes de Taller", "mode": "name" },
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Ordenes de Taller",
+          "mode": "name"
+        },
         "filtersUI": {
           "values": [
             {
@@ -482,16 +834,26 @@
       "name": "Hay OTs en externo",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [560, 750],
+      "position": [
+        560,
+        750
+      ],
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
           "conditions": [
             {
               "id": "cond-externo",
               "leftValue": "={{ $input.all().length }}",
               "rightValue": 0,
-              "operator": { "type": "number", "operation": "gt" }
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
             }
           ],
           "combinator": "and"
@@ -503,7 +865,10 @@
       "name": "Separar vencidas vs a tiempo",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [840, 750],
+      "position": [
+        840,
+        750
+      ],
       "parameters": {
         "jsCode": "const items = $input.all(); const hoy = new Date(); hoy.setHours(0,0,0,0); const vencidas = []; const aTiempo = []; for (const item of items) { const r = item.json; if (!r.Fecha_Limite_Retorno) { aTiempo.push(r); continue; } const partes = String(r.Fecha_Limite_Retorno).split('/'); let lim; if (partes.length === 3) { lim = new Date(parseInt(partes[2]), parseInt(partes[1])-1, parseInt(partes[0])); } else { lim = new Date(r.Fecha_Limite_Retorno); } lim.setHours(0,0,0,0); if (lim < hoy) { const dias = Math.floor((hoy - lim) / 86400000); vencidas.push({...r, dias_atraso: dias}); } else { aTiempo.push(r); } } vencidas.sort((a,b) => b.dias_atraso - a.dias_atraso); return [{json:{vencidas:vencidas, a_tiempo:aTiempo, total_vencidas:vencidas.length, total_a_tiempo:aTiempo.length}}];"
       }
@@ -513,16 +878,26 @@
       "name": "Hay externas vencidas",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [1120, 750],
+      "position": [
+        1400,
+        750
+      ],
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
           "conditions": [
             {
               "id": "cond-vencidas",
               "leftValue": "={{ $json.total_vencidas }}",
               "rightValue": 0,
-              "operator": { "type": "number", "operation": "gt" }
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
             }
           ],
           "combinator": "and"
@@ -534,7 +909,10 @@
       "name": "Alerta externos sin retornar",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
-      "position": [1400, 750],
+      "position": [
+        1680,
+        750
+      ],
       "credentials": {
         "gmailOAuth2": {
           "id": "YOUR_GMAIL_CREDENTIAL_ID",
@@ -543,93 +921,556 @@
       },
       "parameters": {
         "sendTo": "secretarias@laimprentaverde.cl, disenador1@laimprentaverde.cl",
-        "subject": "=[ALERTA] {{ $json.total_vencidas }} pedido(s) en externo sin retornar | La Imprenta Verde",
+        "subject": "=[ALERTA] {{ $json.total_vencidas }} pedido(s) vencido(s) en externo | La Imprenta Verde",
         "emailType": "html",
-        "message": "=<h2>Pedidos en proveedor externo sin retornar</h2><p>Los siguientes pedidos superaron su fecha limite de retorno del proveedor externo:</p><table border='1' cellpadding='8' cellspacing='0'><tr style='background:#e63946;color:white'><th>ID OT</th><th>Cliente</th><th>Proveedor</th><th>Dias de atraso</th><th>Entrega al cliente</th></tr>={{ $json.vencidas.map(v => '<tr><td>' + v.ID_OT + '</td><td>' + v.Cliente + '</td><td>' + (v.Proveedor_Externo||'-') + '</td><td style=color:red>' + v.dias_atraso + ' dias</td><td>' + v.Fecha_Entrega_Estimada + '</td></tr>').join('') }}=</table><p><b>Total vencidos:</b> {{ $json.total_vencidas }} | <b>A tiempo:</b> {{ $json.total_a_tiempo }}</p><p><a href='YOUR_SHEETS_URL'>Ver todos los pedidos en Google Sheets</a></p>",
+        "message": "={{ $json.alertMessage }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "n3b",
+      "name": "Clasificar linea de negocio",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-lob",
+              "leftValue": "={{ $json.Area }}",
+              "rightValue": "Merchandising",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "n3c",
+      "name": "Preparar cotizacion Merchandising",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        200
+      ],
+      "parameters": {
+        "jsCode": "const item = $input.first(); const d = item.json; const now = new Date(); const pad = (n) => String(n).padStart(2, '0'); const dateStr = now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()); const sec = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds(); const seqCot = String((sec + 500) % 1000).padStart(3, '0'); const idCotiz = 'COT-' + dateStr + '-' + seqCot; return [{json:{...d,ID_Cotiz:idCotiz,Descripcion_Producto:d.Asunto_Pedido,Cantidad_Est:0,Precio_Unitario_Est:0,Subtotal_Est:0,IVA_Est:0,Total_Est:0,Estado_Cotiz:'Pendiente revision',Notas_Cotiz:'Generada automaticamente - revisar y completar antes de enviar'}}];"
+      }
+    },
+    {
+      "id": "n3d",
+      "name": "Registrar cotizacion en Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        1120,
+        200
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets - La Imprenta Verde"
+        }
+      },
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Cotizaciones Merchandising",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID_Cotiz": "={{ $json.ID_Cotiz }}",
+            "ID_OT": "={{ $json.ID_OT }}",
+            "Fecha": "={{ $json.Fecha_Ingreso }}",
+            "Cliente": "={{ $json.Cliente }}",
+            "Email_Cliente": "={{ $json.Email_Cliente }}",
+            "Descripcion_Producto": "={{ $json.Descripcion_Producto }}",
+            "Cantidad_Est": "={{ $json.Cantidad_Est }}",
+            "Precio_Unitario_Est": "={{ $json.Precio_Unitario_Est }}",
+            "Subtotal_Est": "={{ $json.Subtotal_Est }}",
+            "IVA_Est": "={{ $json.IVA_Est }}",
+            "Total_Est": "={{ $json.Total_Est }}",
+            "Estado_Cotiz": "={{ $json.Estado_Cotiz }}",
+            "Notas_Cotiz": "={{ $json.Notas_Cotiz }}"
+          },
+          "schema": [
+            {
+              "id": "ID_Cotiz",
+              "displayName": "ID_Cotiz",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "ID_OT",
+              "displayName": "ID_OT",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Fecha",
+              "displayName": "Fecha",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Cliente",
+              "displayName": "Cliente",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Email_Cliente",
+              "displayName": "Email_Cliente",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Descripcion_Producto",
+              "displayName": "Descripcion_Producto",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Cantidad_Est",
+              "displayName": "Cantidad_Est",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "number"
+            },
+            {
+              "id": "Precio_Unitario_Est",
+              "displayName": "Precio_Unitario_Est",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "number"
+            },
+            {
+              "id": "Subtotal_Est",
+              "displayName": "Subtotal_Est",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "number"
+            },
+            {
+              "id": "IVA_Est",
+              "displayName": "IVA_Est",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "number"
+            },
+            {
+              "id": "Total_Est",
+              "displayName": "Total_Est",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "number"
+            },
+            {
+              "id": "Estado_Cotiz",
+              "displayName": "Estado_Cotiz",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Notas_Cotiz",
+              "displayName": "Notas_Cotiz",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n22-prep",
+      "name": "Preparar alerta de externos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        750
+      ],
+      "parameters": {
+        "jsCode": "const d = $input.first().json; const rows = (d.vencidas || []).map(function(v) { return '<tr><td>' + v.ID_OT + '</td><td>' + v.Cliente + '</td><td>' + (v.Proveedor_Externo || '-') + '</td><td style=\"color:#c62828;font-weight:bold\">' + v.dias_atraso + ' dias</td><td>' + (v.Fecha_Entrega_Estimada || '-') + '</td></tr>'; }).join(''); const msg = '<div style=\"font-family:Arial,sans-serif;max-width:700px\">' + '<h2 style=\"color:#c62828\">Pedidos vencidos en proveedor externo</h2>' + '<p>Se detectaron <b>' + d.total_vencidas + '</b> pedido(s) que superaron su fecha limite de retorno:</p>' + '<table border=\"1\" cellpadding=\"8\" cellspacing=\"0\" style=\"border-collapse:collapse;width:100%\">' + '<tr style=\"background:#c62828;color:white\"><th>ID OT</th><th>Cliente</th><th>Proveedor</th><th>Dias de atraso</th><th>Entrega a cliente</th></tr>' + rows + '</table>' + '<p><b>Total vencidos:</b> ' + d.total_vencidas + ' | <b>A tiempo:</b> ' + d.total_a_tiempo + '</p>' + '<p><a href=\"YOUR_SHEETS_URL\" style=\"color:#2d6a4f\">Ver en Google Sheets</a></p>' + '<p style=\"color:#888;font-size:12px\">La Imprenta Verde - Revision automatica de externos - Lunes a viernes 9:00 AM</p>' + '</div>'; return [{json:{...d, alertMessage: msg}}];"
+      }
+    },
+    {
+      "id": "sticky-c4",
+      "name": "Sticky - Carril 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        1100
+      ],
+      "parameters": {
+        "content": "## CARRIL 4 — WhatsApp Business (PLACEHOLDER INACTIVO)\nNodo preparado para futura integracion con WhatsApp Business API.\n**Activar cuando la empresa obtenga un numero dedicado de WhatsApp Business.**\nEstado actual: DESACTIVADO — no recibe ni procesa mensajes.\nCuando se active: conectar al flujo de Carril 1 para unificar el ingreso de pedidos.",
+        "height": 200,
+        "width": 520,
+        "color": 1
+      }
+    },
+    {
+      "id": "n-wa",
+      "name": "PLACEHOLDER WhatsApp Business",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        1100
+      ],
+      "disabled": true,
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-pedidos",
         "options": {}
       }
     }
   ],
   "connections": {
     "Correo nuevo - pedido entrante": {
-      "main": [[{ "node": "Parsear correo y generar ID OT", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Parsear correo y generar ID OT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Parsear correo y generar ID OT": {
-      "main": [[{ "node": "Clasificar area de produccion", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Clasificar linea de negocio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Clasificar area de produccion": {
       "main": [
-        [{ "node": "Registrar OT en Sheets", "type": "main", "index": 0 }],
-        [{ "node": "Registrar OT en Sheets", "type": "main", "index": 0 }],
-        [{ "node": "Registrar OT en Sheets", "type": "main", "index": 0 }],
-        [{ "node": "Registrar OT en Sheets", "type": "main", "index": 0 }],
-        [{ "node": "Registrar OT en Sheets", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Registrar OT en Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar OT en Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar OT en Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar OT en Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar OT en Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Registrar OT en Sheets": {
-      "main": [[
-        { "node": "Notificar al disenador asignado", "type": "main", "index": 0 },
-        { "node": "Confirmar recepcion al cliente", "type": "main", "index": 0 },
-        { "node": "Notificar a secretarias nuevo pedido", "type": "main", "index": 0 }
-      ]]
+      "main": [
+        [
+          {
+            "node": "Notificar al disenador asignado",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Confirmar recepcion al cliente",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Notificar a secretarias nuevo pedido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Cambio detectado en hoja OT": {
-      "main": [[{ "node": "Cambio humano o del sistema", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Cambio humano o del sistema",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Cambio humano o del sistema": {
       "main": [
         [],
-        [{ "node": "Evaluar que campo cambio", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Evaluar que campo cambio",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Evaluar que campo cambio": {
-      "main": [[{ "node": "Guardar en historial de cambios", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Guardar en historial de cambios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Guardar en historial de cambios": {
-      "main": [[
-        { "node": "Notificar al disenador por cambio", "type": "main", "index": 0 },
-        { "node": "Avisar al cliente por cambio de fecha", "type": "main", "index": 0 }
-      ]]
+      "main": [
+        [
+          {
+            "node": "Notificar al disenador por cambio",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Avisar al cliente por cambio de fecha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Notificar al disenador por cambio": {
       "main": [
-        [{ "node": "Avisar cambio al disenador", "type": "main", "index": 0 }],
-        [{ "node": "Avisar cambio a secretarias", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Avisar cambio al disenador",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Avisar cambio a secretarias",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Avisar cambio al disenador": {
-      "main": [[{ "node": "Avisar cambio a secretarias", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Avisar cambio a secretarias",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Avisar al cliente por cambio de fecha": {
       "main": [
-        [{ "node": "Informar nuevo plazo al cliente", "type": "main", "index": 0 }],
+        [
+          {
+            "node": "Informar nuevo plazo al cliente",
+            "type": "main",
+            "index": 0
+          }
+        ],
         []
       ]
     },
     "Revision diaria de externos 9AM": {
-      "main": [[{ "node": "Leer OTs en estado Externo", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Leer OTs en estado Externo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Leer OTs en estado Externo": {
-      "main": [[{ "node": "Hay OTs en externo", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Hay OTs en externo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Hay OTs en externo": {
       "main": [
-        [{ "node": "Separar vencidas vs a tiempo", "type": "main", "index": 0 }],
+        [
+          {
+            "node": "Separar vencidas vs a tiempo",
+            "type": "main",
+            "index": 0
+          }
+        ],
         []
       ]
     },
     "Separar vencidas vs a tiempo": {
-      "main": [[{ "node": "Hay externas vencidas", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Preparar alerta de externos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Hay externas vencidas": {
       "main": [
-        [{ "node": "Alerta externos sin retornar", "type": "main", "index": 0 }],
+        [
+          {
+            "node": "Alerta externos sin retornar",
+            "type": "main",
+            "index": 0
+          }
+        ],
         []
+      ]
+    },
+    "Clasificar linea de negocio": {
+      "main": [
+        [
+          {
+            "node": "Preparar cotizacion Merchandising",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Clasificar area de produccion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar cotizacion Merchandising": {
+      "main": [
+        [
+          {
+            "node": "Registrar cotizacion en Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar cotizacion en Sheets": {
+      "main": [
+        [
+          {
+            "node": "Registrar OT en Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar alerta de externos": {
+      "main": [
+        [
+          {
+            "node": "Hay externas vencidas",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
   "pinData": {},
-  "settings": { "executionOrder": "v1" },
+  "settings": {
+    "executionOrder": "v1"
+  },
   "staticData": null,
   "tags": [
     {
@@ -640,6 +1481,6 @@
     }
   ],
   "triggerCount": 3,
-  "updatedAt": "2025-03-30T00:00:00.000Z",
+  "updatedAt": "2026-06-07T00:00:00.000Z",
   "versionId": "1"
 }
