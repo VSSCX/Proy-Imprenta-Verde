@@ -1,0 +1,645 @@
+{
+  "name": "Trazabilidad OT - La Imprenta Verde",
+  "nodes": [
+    {
+      "id": "sticky-c1",
+      "name": "Sticky - Carril 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-200, 0],
+      "parameters": {
+        "content": "## CARRIL 1 — Pedido nuevo\nSe activa con cada correo nuevo. Clasifica el tipo de producto, registra la OT en Sheets y notifica al disenador, cliente y secretarias.",
+        "height": 160,
+        "width": 400,
+        "color": 4
+      }
+    },
+    {
+      "id": "sticky-c2",
+      "name": "Sticky - Carril 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-200, 400],
+      "parameters": {
+        "content": "## CARRIL 2 — Modificacion\nSe activa cuando alguien edita una fila en el Sheets. Registra el historial del cambio y notifica a los afectados. La columna _Sistema_Flag evita bucles infinitos.",
+        "height": 160,
+        "width": 400,
+        "color": 5
+      }
+    },
+    {
+      "id": "sticky-c3",
+      "name": "Sticky - Carril 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-200, 750],
+      "parameters": {
+        "content": "## CARRIL 3 — Control externo\nCorre automaticamente cada manana a las 9 AM (lunes a viernes). Detecta pedidos que debian haber vuelto del proveedor externo y no lo hicieron, y alerta al equipo.",
+        "height": 160,
+        "width": 400,
+        "color": 3
+      }
+    },
+    {
+      "id": "n1",
+      "name": "Correo nuevo - pedido entrante",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail - La Imprenta Verde"
+        }
+      },
+      "parameters": {
+        "pollTimes": {
+          "item": [{ "mode": "everyMinute" }]
+        },
+        "filters": {
+          "q": "subject:(cotizacion OR pedido OR orden OR solicitud) is:unread"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n2",
+      "name": "Parsear correo y generar ID OT",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [280, 0],
+      "parameters": {
+        "jsCode": "const item = $input.first(); const d = item.json; const now = new Date(); const pad = (n) => String(n).padStart(2, '0'); const dateStr = now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()); const sec = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds(); const seq = String(sec % 1000).padStart(3, '0'); const idOT = 'OT-' + dateStr + '-' + seq; const from = d.from || ''; const ai = from.indexOf('<'); const emailCliente = ai >= 0 ? from.slice(ai+1, from.indexOf('>', ai)) : from; const nombre = (ai >= 0 ? from.slice(0, ai) : emailCliente.split('@')[0]).trim() || 'Cliente'; const asuntoRaw = d.subject || 'Sin asunto'; const asunto = asuntoRaw.toLowerCase(); const addBiz = (dt, n) => { const r = new Date(dt); let a=0; while(a<n){r.setDate(r.getDate()+1);const w=r.getDay();if(w!==0&&w!==6)a++;} return r; }; const fe = addBiz(now,2).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'}); let area = 'Sin Asignar'; let disenador = 'disenador1@laimprentaverde.cl'; if (asunto.match('polera|camiseta|ropa|polo|buzo|chaleco|bordado')) { area='Ropa'; disenador='ropa@laimprentaverde.cl'; } else if (asunto.match('cuaderno|agenda|anillado|espiral|bloc|libreta')) { area='Libreria'; disenador='libreria@laimprentaverde.cl'; } else if (asunto.match('plastificado|laminado|carpeta|oficio|polimate')) { area='Plastificados'; disenador='plastificados@laimprentaverde.cl'; } else if (asunto.match('taza|lapiz|lapicera|pendrive|gift|regalo|mochila')) { area='Merchandising'; disenador='merchandising@laimprentaverde.cl'; } return [{json:{ID_OT:idOT,Fecha_Ingreso:now.toISOString(),Cliente:nombre,Email_Cliente:emailCliente,Asunto_Pedido:asuntoRaw,Cuerpo_Correo:d.text||d.snippet||'',Area:area,Disenador_Asignado:disenador,Estado:'Recibido',Fecha_Entrega_Estimada:fe,Va_A_Externo:'No',Proveedor_Externo:'',Fecha_Limite_Retorno:'',Fecha_Retorno_Real:'',Modalidad_Despacho:'',Notas:'',Fecha_Cierre:'',_Sistema_Flag:''}}];"
+      }
+    },
+    {
+      "id": "n3",
+      "name": "Clasificar area de produccion",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [560, 0],
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": false, "typeValidation": "strict" },
+                "conditions": [{ "leftValue": "={{ $json.Asunto_Pedido }}", "rightValue": "polera|camiseta|ropa|polo|buzo|chaleco|bordado", "operator": { "type": "string", "operation": "regex" } }],
+                "combinator": "any"
+              },
+              "renameOutput": true,
+              "outputKey": "Ropa"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": false, "typeValidation": "strict" },
+                "conditions": [{ "leftValue": "={{ $json.Asunto_Pedido }}", "rightValue": "cuaderno|agenda|anillado|espiral|bloc|libreta", "operator": { "type": "string", "operation": "regex" } }],
+                "combinator": "any"
+              },
+              "renameOutput": true,
+              "outputKey": "Libreria"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": false, "typeValidation": "strict" },
+                "conditions": [{ "leftValue": "={{ $json.Asunto_Pedido }}", "rightValue": "plastificado|laminado|carpeta|oficio|polimate", "operator": { "type": "string", "operation": "regex" } }],
+                "combinator": "any"
+              },
+              "renameOutput": true,
+              "outputKey": "Plastificados"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": false, "typeValidation": "strict" },
+                "conditions": [{ "leftValue": "={{ $json.Asunto_Pedido }}", "rightValue": "taza|lapiz|lapicera|pendrive|gift|regalo|mochila", "operator": { "type": "string", "operation": "regex" } }],
+                "combinator": "any"
+              },
+              "renameOutput": true,
+              "outputKey": "Merchandising"
+            }
+          ]
+        },
+        "fallbackOutput": "extra"
+      }
+    },
+    {
+      "id": "n4",
+      "name": "Registrar OT en Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [840, 0],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets - La Imprenta Verde"
+        }
+      },
+      "parameters": {
+        "operation": "append",
+        "documentId": { "__rl": true, "value": "YOUR_SPREADSHEET_ID", "mode": "id" },
+        "sheetName": { "__rl": true, "value": "Ordenes de Taller", "mode": "name" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID_OT": "={{ $json.ID_OT }}",
+            "Fecha_Ingreso": "={{ $json.Fecha_Ingreso }}",
+            "Cliente": "={{ $json.Cliente }}",
+            "Email_Cliente": "={{ $json.Email_Cliente }}",
+            "Asunto_Pedido": "={{ $json.Asunto_Pedido }}",
+            "Area": "={{ $json.Area }}",
+            "Disenador_Asignado": "={{ $json.Disenador_Asignado }}",
+            "Estado": "={{ $json.Estado }}",
+            "Fecha_Entrega_Estimada": "={{ $json.Fecha_Entrega_Estimada }}",
+            "Va_A_Externo": "={{ $json.Va_A_Externo }}",
+            "Proveedor_Externo": "",
+            "Fecha_Limite_Retorno": "",
+            "Fecha_Retorno_Real": "",
+            "Modalidad_Despacho": "",
+            "Notas": "",
+            "Fecha_Cierre": "",
+            "_Sistema_Flag": ""
+          },
+          "schema": [
+            { "id": "ID_OT", "displayName": "ID_OT", "required": false, "defaultMatch": false, "canBeUsedToMatch": true, "display": true, "type": "string" },
+            { "id": "Fecha_Ingreso", "displayName": "Fecha_Ingreso", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
+            { "id": "Cliente", "displayName": "Cliente", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
+            { "id": "Email_Cliente", "displayName": "Email_Cliente", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
+            { "id": "Asunto_Pedido", "displayName": "Asunto_Pedido", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
+            { "id": "Area", "displayName": "Area", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
+            { "id": "Disenador_Asignado", "displayName": "Disenador_Asignado", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
+            { "id": "Estado", "displayName": "Estado", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
+            { "id": "Fecha_Entrega_Estimada", "displayName": "Fecha_Entrega_Estimada", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
+            { "id": "Va_A_Externo", "displayName": "Va_A_Externo", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
+            { "id": "Proveedor_Externo", "displayName": "Proveedor_Externo", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
+            { "id": "Fecha_Limite_Retorno", "displayName": "Fecha_Limite_Retorno", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
+            { "id": "Fecha_Retorno_Real", "displayName": "Fecha_Retorno_Real", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
+            { "id": "Modalidad_Despacho", "displayName": "Modalidad_Despacho", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
+            { "id": "Notas", "displayName": "Notas", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
+            { "id": "Fecha_Cierre", "displayName": "Fecha_Cierre", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
+            { "id": "_Sistema_Flag", "displayName": "_Sistema_Flag", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n5",
+      "name": "Notificar al disenador asignado",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1120, -80],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail - La Imprenta Verde"
+        }
+      },
+      "parameters": {
+        "sendTo": "={{ $json.Disenador_Asignado }}",
+        "subject": "=[{{ $json.ID_OT }}] Nuevo pedido asignado: {{ $json.Asunto_Pedido }}",
+        "emailType": "html",
+        "message": "=<h2>Nuevo pedido asignado</h2><table border='1' cellpadding='8' cellspacing='0'><tr><td><b>ID OT</b></td><td>{{ $json.ID_OT }}</td></tr><tr><td><b>Cliente</b></td><td>{{ $json.Cliente }}</td></tr><tr><td><b>Pedido</b></td><td>{{ $json.Asunto_Pedido }}</td></tr><tr><td><b>Area</b></td><td>{{ $json.Area }}</td></tr><tr><td><b>Entrega estimada</b></td><td>{{ $json.Fecha_Entrega_Estimada }}</td></tr></table><p><b>Accion requerida:</b> Actualiza la columna Estado en el Sheets cuando inicies y cuando termines este pedido.</p><p><a href='YOUR_SHEETS_URL'>Abrir Google Sheets</a></p><hr><p><small>La Imprenta Verde — Sistema automatico de OT</small></p>",
+        "options": {}
+      }
+    },
+    {
+      "id": "n6",
+      "name": "Confirmar recepcion al cliente",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1120, 0],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail - La Imprenta Verde"
+        }
+      },
+      "parameters": {
+        "sendTo": "={{ $json.Email_Cliente }}",
+        "subject": "=Pedido recibido - Folio {{ $json.ID_OT }} | La Imprenta Verde",
+        "emailType": "html",
+        "message": "=<h2>Hemos recibido tu solicitud</h2><p>Estimado/a <b>{{ $json.Cliente }}</b>,</p><p>Confirmamos la recepcion de tu pedido. A continuacion los detalles:</p><table border='1' cellpadding='8' cellspacing='0'><tr><td><b>Numero de folio</b></td><td><b>{{ $json.ID_OT }}</b></td></tr><tr><td><b>Descripcion</b></td><td>{{ $json.Asunto_Pedido }}</td></tr><tr><td><b>Fecha estimada de entrega</b></td><td>{{ $json.Fecha_Entrega_Estimada }}</td></tr></table><p>Guarda tu numero de folio para hacer seguimiento de tu pedido.</p><p>Para consultas, contacta a nuestras secretarias:<br><b>secretarias@laimprentaverde.cl</b></p><p>Gracias por confiar en La Imprenta Verde. Trabajamos con dedicacion para entregar resultados de excelencia.</p><hr><p><small>La Imprenta Verde | pedidos@laimprentaverde.cl</small></p>",
+        "options": {}
+      }
+    },
+    {
+      "id": "n7",
+      "name": "Notificar a secretarias nuevo pedido",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1120, 80],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail - La Imprenta Verde"
+        }
+      },
+      "parameters": {
+        "sendTo": "secretarias@laimprentaverde.cl",
+        "subject": "=[{{ $json.ID_OT }}] Nuevo pedido ingresado — {{ $json.Cliente }}",
+        "emailType": "html",
+        "message": "=<h2>Nuevo pedido ingresado al sistema</h2><table border='1' cellpadding='8' cellspacing='0'><tr><td><b>ID OT</b></td><td>{{ $json.ID_OT }}</td></tr><tr><td><b>Cliente</b></td><td>{{ $json.Cliente }}</td></tr><tr><td><b>Email</b></td><td>{{ $json.Email_Cliente }}</td></tr><tr><td><b>Pedido</b></td><td>{{ $json.Asunto_Pedido }}</td></tr><tr><td><b>Area asignada</b></td><td>{{ $json.Area }}</td></tr><tr><td><b>Disenador</b></td><td>{{ $json.Disenador_Asignado }}</td></tr><tr><td><b>Entrega estimada</b></td><td>{{ $json.Fecha_Entrega_Estimada }}</td></tr><tr><td><b>Estado</b></td><td>{{ $json.Estado }}</td></tr></table><p><a href='YOUR_SHEETS_URL'>Ver en Google Sheets</a></p>",
+        "options": {}
+      }
+    },
+    {
+      "id": "n8",
+      "name": "Cambio detectado en hoja OT",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [0, 400],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets - La Imprenta Verde"
+        }
+      },
+      "parameters": {
+        "event": "anyUpdate",
+        "documentId": { "__rl": true, "value": "YOUR_SPREADSHEET_ID", "mode": "id" },
+        "sheetName": { "__rl": true, "value": "Ordenes de Taller", "mode": "name" },
+        "options": {}
+      }
+    },
+    {
+      "id": "n9",
+      "name": "Cambio humano o del sistema",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [280, 400],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-sistema",
+              "leftValue": "={{ $json._Sistema_Flag }}",
+              "rightValue": "SI",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "n10",
+      "name": "Evaluar que campo cambio",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [560, 400],
+      "parameters": {
+        "jsCode": "const item = $input.first(); const d = item.json; const relevantes = ['Estado','Va_A_Externo','Fecha_Entrega_Estimada','Modalidad_Despacho']; let campo = 'Otro'; for (const c of relevantes) { if (d[c] !== undefined && d[c] !== null && d[c] !== '') { campo = c; break; } } const notDisenador = campo === 'Estado' || campo === 'Fecha_Entrega_Estimada'; const notCliente = campo === 'Fecha_Entrega_Estimada'; return [{json:{...d, campo_modificado: campo, notificar_disenador: notDisenador, notificar_cliente: notCliente}}];"
+      }
+    },
+    {
+      "id": "n11",
+      "name": "Guardar en historial de cambios",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [840, 400],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets - La Imprenta Verde"
+        }
+      },
+      "parameters": {
+        "operation": "append",
+        "documentId": { "__rl": true, "value": "YOUR_SPREADSHEET_ID", "mode": "id" },
+        "sheetName": { "__rl": true, "value": "Historial de Cambios", "mode": "name" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID_OT": "={{ $json.ID_OT }}",
+            "Fecha_Cambio": "={{ new Date().toISOString() }}",
+            "Campo_Modificado": "={{ $json.campo_modificado }}",
+            "Valor_Anterior": "",
+            "Valor_Nuevo": "={{ $json[$json.campo_modificado] }}",
+            "Notas_Cambio": "=Cambio detectado automaticamente"
+          },
+          "schema": [
+            { "id": "ID_OT", "displayName": "ID_OT", "required": false, "defaultMatch": false, "canBeUsedToMatch": true, "display": true, "type": "string" },
+            { "id": "Fecha_Cambio", "displayName": "Fecha_Cambio", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
+            { "id": "Campo_Modificado", "displayName": "Campo_Modificado", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
+            { "id": "Valor_Anterior", "displayName": "Valor_Anterior", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
+            { "id": "Valor_Nuevo", "displayName": "Valor_Nuevo", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" },
+            { "id": "Notas_Cambio", "displayName": "Notas_Cambio", "required": false, "defaultMatch": false, "canBeUsedToMatch": false, "display": true, "type": "string" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n12",
+      "name": "Notificar al disenador por cambio",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1120, 350],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-disenador",
+              "leftValue": "={{ $json.notificar_disenador }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "n13",
+      "name": "Avisar cambio al disenador",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1400, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail - La Imprenta Verde"
+        }
+      },
+      "parameters": {
+        "sendTo": "={{ $json.Disenador_Asignado }}",
+        "subject": "=[{{ $json.ID_OT }}] Cambio en pedido: {{ $json.campo_modificado }}",
+        "emailType": "html",
+        "message": "=<h2>Cambio registrado en tu pedido</h2><table border='1' cellpadding='8' cellspacing='0'><tr><td><b>ID OT</b></td><td>{{ $json.ID_OT }}</td></tr><tr><td><b>Cliente</b></td><td>{{ $json.Cliente }}</td></tr><tr><td><b>Campo modificado</b></td><td>{{ $json.campo_modificado }}</td></tr><tr><td><b>Nuevo valor</b></td><td>{{ $json[$json.campo_modificado] }}</td></tr></table><p><a href='YOUR_SHEETS_URL'>Ver en Google Sheets</a></p>",
+        "options": {}
+      }
+    },
+    {
+      "id": "n14",
+      "name": "Avisar cambio a secretarias",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1400, 400],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail - La Imprenta Verde"
+        }
+      },
+      "parameters": {
+        "sendTo": "secretarias@laimprentaverde.cl",
+        "subject": "=[{{ $json.ID_OT }}] Pedido modificado — {{ $json.campo_modificado }}",
+        "emailType": "html",
+        "message": "=<h2>Modificacion detectada en pedido</h2><table border='1' cellpadding='8' cellspacing='0'><tr><td><b>ID OT</b></td><td>{{ $json.ID_OT }}</td></tr><tr><td><b>Cliente</b></td><td>{{ $json.Cliente }}</td></tr><tr><td><b>Campo modificado</b></td><td>{{ $json.campo_modificado }}</td></tr><tr><td><b>Nuevo valor</b></td><td>{{ $json[$json.campo_modificado] }}</td></tr><tr><td><b>Estado actual</b></td><td>{{ $json.Estado }}</td></tr></table><p><a href='YOUR_SHEETS_URL'>Ver en Google Sheets</a></p>",
+        "options": {}
+      }
+    },
+    {
+      "id": "n15",
+      "name": "Avisar al cliente por cambio de fecha",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1400, 500],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-cliente",
+              "leftValue": "={{ $json.notificar_cliente }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "n16",
+      "name": "Informar nuevo plazo al cliente",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1680, 500],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail - La Imprenta Verde"
+        }
+      },
+      "parameters": {
+        "sendTo": "={{ $json.Email_Cliente }}",
+        "subject": "=Actualizacion de su pedido Folio {{ $json.ID_OT }} | La Imprenta Verde",
+        "emailType": "html",
+        "message": "=<h2>Actualizacion de fecha de entrega</h2><p>Estimado/a <b>{{ $json.Cliente }}</b>,</p><p>Le informamos que la fecha estimada de entrega de su pedido ha sido actualizada.</p><table border='1' cellpadding='8' cellspacing='0'><tr><td><b>Folio</b></td><td>{{ $json.ID_OT }}</td></tr><tr><td><b>Pedido</b></td><td>{{ $json.Asunto_Pedido }}</td></tr><tr><td><b>Nueva fecha estimada</b></td><td>{{ $json.Fecha_Entrega_Estimada }}</td></tr></table><p>Lamentamos los inconvenientes. Para consultas: secretarias@laimprentaverde.cl</p><p>Gracias por su comprension.</p><hr><p><small>La Imprenta Verde</small></p>",
+        "options": {}
+      }
+    },
+    {
+      "id": "n17",
+      "name": "Revision diaria de externos 9AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [0, 750],
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "custom",
+              "cronExpression": "0 9 * * 1-5"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "n18",
+      "name": "Leer OTs en estado Externo",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [280, 750],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets - La Imprenta Verde"
+        }
+      },
+      "parameters": {
+        "operation": "read",
+        "documentId": { "__rl": true, "value": "YOUR_SPREADSHEET_ID", "mode": "id" },
+        "sheetName": { "__rl": true, "value": "Ordenes de Taller", "mode": "name" },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Estado",
+              "lookupValue": "En Externo"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n19",
+      "name": "Hay OTs en externo",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [560, 750],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-externo",
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "n20",
+      "name": "Separar vencidas vs a tiempo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [840, 750],
+      "parameters": {
+        "jsCode": "const items = $input.all(); const hoy = new Date(); hoy.setHours(0,0,0,0); const vencidas = []; const aTiempo = []; for (const item of items) { const r = item.json; if (!r.Fecha_Limite_Retorno) { aTiempo.push(r); continue; } const partes = String(r.Fecha_Limite_Retorno).split('/'); let lim; if (partes.length === 3) { lim = new Date(parseInt(partes[2]), parseInt(partes[1])-1, parseInt(partes[0])); } else { lim = new Date(r.Fecha_Limite_Retorno); } lim.setHours(0,0,0,0); if (lim < hoy) { const dias = Math.floor((hoy - lim) / 86400000); vencidas.push({...r, dias_atraso: dias}); } else { aTiempo.push(r); } } vencidas.sort((a,b) => b.dias_atraso - a.dias_atraso); return [{json:{vencidas:vencidas, a_tiempo:aTiempo, total_vencidas:vencidas.length, total_a_tiempo:aTiempo.length}}];"
+      }
+    },
+    {
+      "id": "n21",
+      "name": "Hay externas vencidas",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1120, 750],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-vencidas",
+              "leftValue": "={{ $json.total_vencidas }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "n22",
+      "name": "Alerta externos sin retornar",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1400, 750],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail - La Imprenta Verde"
+        }
+      },
+      "parameters": {
+        "sendTo": "secretarias@laimprentaverde.cl, disenador1@laimprentaverde.cl",
+        "subject": "=[ALERTA] {{ $json.total_vencidas }} pedido(s) en externo sin retornar | La Imprenta Verde",
+        "emailType": "html",
+        "message": "=<h2>Pedidos en proveedor externo sin retornar</h2><p>Los siguientes pedidos superaron su fecha limite de retorno del proveedor externo:</p><table border='1' cellpadding='8' cellspacing='0'><tr style='background:#e63946;color:white'><th>ID OT</th><th>Cliente</th><th>Proveedor</th><th>Dias de atraso</th><th>Entrega al cliente</th></tr>={{ $json.vencidas.map(v => '<tr><td>' + v.ID_OT + '</td><td>' + v.Cliente + '</td><td>' + (v.Proveedor_Externo||'-') + '</td><td style=color:red>' + v.dias_atraso + ' dias</td><td>' + v.Fecha_Entrega_Estimada + '</td></tr>').join('') }}=</table><p><b>Total vencidos:</b> {{ $json.total_vencidas }} | <b>A tiempo:</b> {{ $json.total_a_tiempo }}</p><p><a href='YOUR_SHEETS_URL'>Ver todos los pedidos en Google Sheets</a></p>",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Correo nuevo - pedido entrante": {
+      "main": [[{ "node": "Parsear correo y generar ID OT", "type": "main", "index": 0 }]]
+    },
+    "Parsear correo y generar ID OT": {
+      "main": [[{ "node": "Clasificar area de produccion", "type": "main", "index": 0 }]]
+    },
+    "Clasificar area de produccion": {
+      "main": [
+        [{ "node": "Registrar OT en Sheets", "type": "main", "index": 0 }],
+        [{ "node": "Registrar OT en Sheets", "type": "main", "index": 0 }],
+        [{ "node": "Registrar OT en Sheets", "type": "main", "index": 0 }],
+        [{ "node": "Registrar OT en Sheets", "type": "main", "index": 0 }],
+        [{ "node": "Registrar OT en Sheets", "type": "main", "index": 0 }]
+      ]
+    },
+    "Registrar OT en Sheets": {
+      "main": [[
+        { "node": "Notificar al disenador asignado", "type": "main", "index": 0 },
+        { "node": "Confirmar recepcion al cliente", "type": "main", "index": 0 },
+        { "node": "Notificar a secretarias nuevo pedido", "type": "main", "index": 0 }
+      ]]
+    },
+    "Cambio detectado en hoja OT": {
+      "main": [[{ "node": "Cambio humano o del sistema", "type": "main", "index": 0 }]]
+    },
+    "Cambio humano o del sistema": {
+      "main": [
+        [],
+        [{ "node": "Evaluar que campo cambio", "type": "main", "index": 0 }]
+      ]
+    },
+    "Evaluar que campo cambio": {
+      "main": [[{ "node": "Guardar en historial de cambios", "type": "main", "index": 0 }]]
+    },
+    "Guardar en historial de cambios": {
+      "main": [[
+        { "node": "Notificar al disenador por cambio", "type": "main", "index": 0 },
+        { "node": "Avisar al cliente por cambio de fecha", "type": "main", "index": 0 }
+      ]]
+    },
+    "Notificar al disenador por cambio": {
+      "main": [
+        [{ "node": "Avisar cambio al disenador", "type": "main", "index": 0 }],
+        [{ "node": "Avisar cambio a secretarias", "type": "main", "index": 0 }]
+      ]
+    },
+    "Avisar cambio al disenador": {
+      "main": [[{ "node": "Avisar cambio a secretarias", "type": "main", "index": 0 }]]
+    },
+    "Avisar al cliente por cambio de fecha": {
+      "main": [
+        [{ "node": "Informar nuevo plazo al cliente", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Revision diaria de externos 9AM": {
+      "main": [[{ "node": "Leer OTs en estado Externo", "type": "main", "index": 0 }]]
+    },
+    "Leer OTs en estado Externo": {
+      "main": [[{ "node": "Hay OTs en externo", "type": "main", "index": 0 }]]
+    },
+    "Hay OTs en externo": {
+      "main": [
+        [{ "node": "Separar vencidas vs a tiempo", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Separar vencidas vs a tiempo": {
+      "main": [[{ "node": "Hay externas vencidas", "type": "main", "index": 0 }]]
+    },
+    "Hay externas vencidas": {
+      "main": [
+        [{ "node": "Alerta externos sin retornar", "type": "main", "index": 0 }],
+        []
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": { "executionOrder": "v1" },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "updatedAt": "2025-01-01T00:00:00.000Z",
+      "id": "tag-imprenta-verde",
+      "name": "La Imprenta Verde"
+    }
+  ],
+  "triggerCount": 3,
+  "updatedAt": "2025-03-30T00:00:00.000Z",
+  "versionId": "1"
+}
