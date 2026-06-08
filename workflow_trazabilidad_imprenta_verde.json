@@ -88,7 +88,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "const item = $input.first(); const d = item.json; const now = new Date(); const pad = (n) => String(n).padStart(2, '0'); const dateStr = now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()); const sec = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds(); const seq = String(sec % 1000).padStart(3, '0'); const idOT = 'OT-' + dateStr + '-' + seq; const from = d.from || ''; const ai = from.indexOf('<'); const emailCliente = ai >= 0 ? from.slice(ai+1, from.indexOf('>', ai)) : from; const nombre = (ai >= 0 ? from.slice(0, ai) : emailCliente.split('@')[0]).trim() || 'Cliente'; const asuntoRaw = d.subject || 'Sin asunto'; const asunto = asuntoRaw.toLowerCase(); const addBiz = (dt, n) => { const r = new Date(dt); let a=0; while(a<n){r.setDate(r.getDate()+1);const w=r.getDay();if(w!==0&&w!==6)a++;} return r; }; const fe = addBiz(now,2).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'}); let area = 'Sin Asignar'; let disenador = 'disenador1@laimprentaverde.cl'; let lineaNegocio = 'Papeleria'; if (asunto.match('polera|camiseta|ropa|polo|buzo|chaleco|bordado')) { area='Ropa'; disenador='ropa@laimprentaverde.cl'; } else if (asunto.match('cuaderno|agenda|anillado|espiral|bloc|libreta')) { area='Libreria'; disenador='libreria@laimprentaverde.cl'; } else if (asunto.match('plastificado|laminado|carpeta|oficio|polimate')) { area='Plastificados'; disenador='plastificados@laimprentaverde.cl'; } else if (asunto.match('taza|lapiz|lapicera|pendrive|gift|regalo|mochila|souvenir|gorro|termos|termo')) { area='Merchandising'; disenador='merchandising@laimprentaverde.cl'; lineaNegocio='Merchandising'; } return [{json:{ID_OT:idOT,Fecha_Ingreso:now.toISOString(),Cliente:nombre,Email_Cliente:emailCliente,Asunto_Pedido:asuntoRaw,Cuerpo_Correo:d.text||d.snippet||'',Area:area,Disenador_Asignado:disenador,Estado:'Recibido',Fecha_Entrega_Estimada:fe,LineaNegocio:lineaNegocio,Va_A_Externo:'No',Proveedor_Externo:'',Fecha_Limite_Retorno:'',Fecha_Retorno_Real:'',Modalidad_Despacho:'',Notas:'',Fecha_Cierre:'',_Sistema_Flag:''}}];"
+        "jsCode": "const item = $input.first(); const d = item.json; const now = new Date(); const pad = (n) => String(n).padStart(2, '0'); const dateStr = now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()); const sec = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds(); const seq = String(sec % 1000).padStart(3, '0'); const idOT = 'OT-' + dateStr + '-' + seq; const from = d.from || ''; const ai = from.indexOf('<'); const emailCliente = ai >= 0 ? from.slice(ai+1, from.indexOf('>', ai)) : from; const nombre = (ai >= 0 ? from.slice(0, ai) : emailCliente.split('@')[0]).trim() || 'Cliente'; const asuntoRaw = d.subject || 'Sin asunto'; const asunto = asuntoRaw.toLowerCase(); const addBiz = (dt, n) => { const r = new Date(dt); let a=0; while(a<n){r.setDate(r.getDate()+1);const w=r.getDay();if(w!==0&&w!==6)a++;} return r; }; const fe = addBiz(now,2).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'}); let area = 'Sin Asignar'; let disenador = 'disenador1@laimprentaverde.cl'; let lineaNegocio = 'Papeleria'; if (asunto.match('polera|camiseta|ropa|polo|buzo|chaleco|bordado')) { area='Ropa'; disenador='ropa@laimprentaverde.cl'; } else if (asunto.match('cuaderno|agenda|anillado|espiral|bloc|libreta')) { area='Libreria'; disenador='libreria@laimprentaverde.cl'; } else if (asunto.match('plastificado|laminado|carpeta|oficio|polimate')) { area='Plastificados'; disenador='plastificados@laimprentaverde.cl'; } else if (asunto.match('taza|lapiz|lapicera|pendrive|gift|regalo|mochila|souvenir|gorro|termos|termo')) { area='Merchandising'; disenador='merchandising@laimprentaverde.cl'; lineaNegocio='Merchandising'; } return [{json:{ID_OT:idOT,Fecha_Ingreso:now.toISOString(),Cliente:nombre,Email_Cliente:emailCliente,Asunto_Pedido:asuntoRaw,Cuerpo_Correo:d.text||d.snippet||'',Area:area,Disenador_Asignado:disenador,Estado:'Recibido',Fecha_Entrega_Estimada:fe,LineaNegocio:lineaNegocio,Canal:'Email',Va_A_Externo:'No',Proveedor_Externo:'',Fecha_Limite_Retorno:'',Fecha_Retorno_Real:'',Modalidad_Despacho:'',Notas:'',Fecha_Cierre:'',_Sistema_Flag:''}}];"
       }
     },
     {
@@ -398,7 +398,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 4,
+      "waitBetweenTries": 3000
     },
     {
       "id": "n5",
@@ -421,7 +424,11 @@
         "emailType": "html",
         "message": "=<div style='font-family:Arial,sans-serif;max-width:600px'><p>Hola, te llego un pedido nuevo asignado a tu area.</p><table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;width:100%'><tr style='background:#f0f7f4'><td><b>Folio OT</b></td><td><b>{{ $json.ID_OT }}</b></td></tr><tr><td>Cliente</td><td>{{ $json.Cliente }}</td></tr><tr><td>Pedido</td><td>{{ $json.Asunto_Pedido }}</td></tr><tr><td>Area</td><td>{{ $json.Area }}</td></tr><tr><td>Entrega estimada</td><td>{{ $json.Fecha_Entrega_Estimada }}</td></tr></table><p>Recuerda actualizar el estado en el Sheets cuando empieces y cuando termines. Cualquier duda, avisa.</p><p><a href='YOUR_SHEETS_URL' style='color:#2d6a4f'>Ver en Google Sheets</a></p><hr style='border:none;border-top:1px solid #eee;margin:16px 0'><p style='color:#888;font-size:12px'>La Imprenta Verde · Sistema de ordenes de trabajo</p></div>",
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "n6",
@@ -444,7 +451,11 @@
         "emailType": "html",
         "message": "={{ $json.mensajeCliente }}",
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "n7",
@@ -467,7 +478,11 @@
         "emailType": "html",
         "message": "=<div style='font-family:Arial,sans-serif;max-width:600px'><h3>Nuevo pedido registrado en el sistema</h3><table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;width:100%'><tr style='background:#f5f5f5'><td><b>ID OT</b></td><td><b>{{ $json.ID_OT }}</b></td></tr><tr><td>Cliente</td><td>{{ $json.Cliente }}</td></tr><tr><td>Email cliente</td><td>{{ $json.Email_Cliente }}</td></tr><tr><td>Pedido</td><td>{{ $json.Asunto_Pedido }}</td></tr><tr><td>Area asignada</td><td>{{ $json.Area }}</td></tr><tr><td>Disenador</td><td>{{ $json.Disenador_Asignado }}</td></tr><tr><td>Entrega estimada</td><td>{{ $json.Fecha_Entrega_Estimada }}</td></tr><tr><td>Estado</td><td>{{ $json.Estado }}</td></tr></table><p><a href='YOUR_SHEETS_URL' style='color:#2d6a4f'>Ver en Google Sheets</a></p><hr style='border:none;border-top:1px solid #eee;margin:16px 0'><p style='color:#888;font-size:12px'>La Imprenta Verde · Sistema de ordenes</p></div>",
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "n8",
@@ -638,7 +653,11 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "n12",
@@ -692,7 +711,11 @@
         "emailType": "html",
         "message": "=<div style='font-family:Arial,sans-serif;max-width:600px'><p>Hola, hay una actualizacion en uno de tus pedidos.</p><table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;width:100%'><tr style='background:#f0f7f4'><td><b>Folio OT</b></td><td><b>{{ $json.ID_OT }}</b></td></tr><tr><td>Cliente</td><td>{{ $json.Cliente }}</td></tr><tr><td>Campo modificado</td><td>{{ $json.campo_modificado }}</td></tr><tr><td>Nuevo valor</td><td><b>{{ $json[$json.campo_modificado] }}</b></td></tr></table><p>Si tienes alguna duda, coordina con secretarias.</p><p><a href='YOUR_SHEETS_URL' style='color:#2d6a4f'>Ver en Google Sheets</a></p><hr style='border:none;border-top:1px solid #eee;margin:16px 0'><p style='color:#888;font-size:12px'>La Imprenta Verde · Sistema de ordenes</p></div>",
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "n14",
@@ -715,7 +738,11 @@
         "emailType": "html",
         "message": "=<div style='font-family:Arial,sans-serif;max-width:600px'><h3>Modificacion detectada en pedido</h3><table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;width:100%'><tr style='background:#f5f5f5'><td><b>ID OT</b></td><td><b>{{ $json.ID_OT }}</b></td></tr><tr><td>Cliente</td><td>{{ $json.Cliente }}</td></tr><tr><td>Campo modificado</td><td>{{ $json.campo_modificado }}</td></tr><tr><td>Nuevo valor</td><td>{{ $json[$json.campo_modificado] }}</td></tr><tr><td>Estado actual</td><td>{{ $json.Estado }}</td></tr></table><p><a href='YOUR_SHEETS_URL' style='color:#2d6a4f'>Ver en Google Sheets</a></p><hr style='border:none;border-top:1px solid #eee;margin:16px 0'><p style='color:#888;font-size:12px'>La Imprenta Verde · Sistema de ordenes</p></div>",
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "n15",
@@ -769,7 +796,11 @@
         "emailType": "html",
         "message": "=<div style='font-family:Arial,sans-serif;max-width:600px'><h2 style='color:#2d6a4f'>Hola {{ $json.Cliente }}</h2><p>Te escribimos para avisarte que la fecha estimada de entrega de tu pedido fue actualizada.</p><table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;width:100%;margin:16px 0'><tr style='background:#f0f7f4'><td><b>Folio</b></td><td><b>{{ $json.ID_OT }}</b></td></tr><tr><td>Pedido</td><td>{{ $json.Asunto_Pedido }}</td></tr><tr><td>Nueva fecha estimada</td><td><b>{{ $json.Fecha_Entrega_Estimada }}</b></td></tr></table><p>Lamentamos cualquier inconveniente. Estamos trabajando para entregarte el mejor resultado posible.</p><p>Cualquier duda, contactanos en <a href='mailto:secretarias@laimprentaverde.cl' style='color:#2d6a4f'>secretarias@laimprentaverde.cl</a>.</p><p>Gracias por tu confianza y comprension.</p><hr style='border:none;border-top:1px solid #eee;margin:16px 0'><p style='color:#888;font-size:12px'>La Imprenta Verde | pedidos@laimprentaverde.cl</p></div>",
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "n17",
@@ -827,7 +858,11 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "n19",
@@ -925,7 +960,11 @@
         "emailType": "html",
         "message": "={{ $json.alertMessage }}",
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "n3b",
@@ -1346,7 +1385,10 @@
           ]
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 4,
+      "waitBetweenTries": 3000
     },
     {
       "id": "n22-prep",
@@ -1371,9 +1413,9 @@
         1100
       ],
       "parameters": {
-        "content": "## CARRIL 4 — WhatsApp Business (PLACEHOLDER INACTIVO)\nNodo preparado para futura integracion con WhatsApp Business API.\n**Activar cuando la empresa obtenga un numero dedicado de WhatsApp Business.**\nEstado actual: DESACTIVADO — no recibe ni procesa mensajes.\nCuando se active: conectar al flujo de Carril 1 para unificar el ingreso de pedidos.",
-        "height": 200,
-        "width": 520,
+        "content": "## CARRIL 4 — WhatsApp (PLACEHOLDER, DESACTIVADO)\nModulos listos para conectar cuando la imprenta tenga su canal de WhatsApp.\n\n**Para activar (3 pasos):**\n1. Habilitar 'PLACEHOLDER WhatsApp Business' y 'Normalizar mensaje WhatsApp' (quitar Disabled).\n2. Apuntar el webhook del proveedor (WAHA / Evolution API / WhatsApp Cloud) a la URL del nodo Webhook.\n3. (Opcional) Agregar un nodo de envio por WhatsApp para responder al cliente; las notificaciones internas ya funcionan.\n\nEl mensaje se normaliza al mismo formato del correo y entra al flujo de clasificacion del Carril 1.",
+        "height": 260,
+        "width": 560,
         "color": 1
       }
     },
@@ -1434,7 +1476,11 @@
           "mode": "name"
         },
         "options": {}
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "n3-merge",
@@ -1459,7 +1505,7 @@
         250
       ],
       "parameters": {
-        "jsCode": "const todos = $input.all(); const emailItem = todos.find(function(i) { return i.json.LineaNegocio !== undefined; }); const precios = todos.filter(function(i) { return i.json.Keywords !== undefined; }); const eD = emailItem ? emailItem.json : $('Preparar cotizacion Merchandising').first().json; const texto = ((eD.Asunto_Pedido || '') + ' ' + (eD.Cuerpo_Correo || '')).toLowerCase(); function numCerca(txt, kw) {   const re = new RegExp('(\\\\d{1,5})\\\\s*' + kw + '|' + kw + '\\\\s*(\\\\d{1,5})', 'i');   const m = txt.match(re);   if (m) return parseInt(m[1] || m[2]);   const nums = txt.match(/\\d{2,5}/g);   return nums ? parseInt(nums[0]) : 1; } const matches = []; const usados = {}; for (let pi = 0; pi < precios.length; pi++) {   const pj = precios[pi].json;   const kws = (pj.Keywords || '').toLowerCase().split(',');   for (let ki = 0; ki < kws.length; ki++) {     const kw = kws[ki].trim();     if (!kw || usados[pj.Producto]) continue;     if (texto.indexOf(kw) >= 0) {       usados[pj.Producto] = true;       const cnt = numCerca(texto, kw);       const pu = parseFloat(String(pj.Precio_Unitario_Neto || '0').replace(/\\./g,'').replace(',','.')) || 0;       matches.push({ producto: pj.Producto || kw.toUpperCase(), cantidad: cnt, valorUnit: pu, subtotal: cnt * pu, tiempo: pj.Tiempo_Produccion || '3-5 dias habiles' });       break;     }   } } const encontrado = matches.length > 0; const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']; const now = new Date(); const fechaF = eD.Fecha_Formal || ('Santiago, ' + now.getDate() + ' de ' + meses[now.getMonth()] + ' de ' + now.getFullYear()); const plazo = encontrado ? matches[0].tiempo : '3-5 dias habiles'; let filas = ''; let subG = 0; for (let mi = 0; mi < matches.length; mi++) {   const m = matches[mi]; subG += m.subtotal;   filas += '<tr>'     + '<td style=\\'padding:8px;border:1px solid #ccc\\'>' + m.producto + '</td>'     + '<td style=\\'padding:8px;border:1px solid #ccc;text-align:right\\'>' + m.cantidad + '</td>'     + '<td style=\\'padding:8px;border:1px solid #ccc;text-align:right\\'>$' + m.valorUnit.toLocaleString('es-CL') + '</td>'     + '</tr>'; } const iva = Math.round(subG * 0.19); const total = subG + iva; let htmlCotiz = ''; if (encontrado) {   htmlCotiz =     '<div style=\\'font-family:Arial,sans-serif;max-width:700px;padding:20px\\'>'     + '<table width=\\'100%\\' cellpadding=\\'0\\' cellspacing=\\'0\\' style=\\'margin-bottom:20px\\'><tr>'     + '<td><strong style=\\'font-size:22px;color:#2c5f8a\\'>imprenta</strong><strong style=\\'font-size:22px;color:#e63946\\'>mmg</strong><br><small style=\\'color:#666;letter-spacing:2px\\'>DIGITAL &amp; OFFSET</small></td>'     + '<td align=\\'right\\' style=\\'font-size:13px;color:#333;vertical-align:top\\'>' + fechaF + '</td>'     + '</tr></table>'     + '<h2 style=\\'color:#1a3a5c;text-decoration:underline\\'>COTIZACION IMPRENTA MMG # ' + eD.N_Cotiz + '</h2>'     + '<p><strong>Sres.:</strong><br><strong>' + eD.Cliente + '</strong><br>At: ' + eD.Atencion + '<br><u>PRESENTE</u></p>'     + '<p>Junto con saludarle, tenemos el agrado de hacerle llegar un presupuesto por los siguientes conceptos:</p>'     + '<table cellpadding=\\'0\\' cellspacing=\\'0\\' style=\\'border-collapse:collapse;width:100%;margin:16px 0\\'>'     + '<tr style=\\'background:#e8e8e8\\'>'     + '<td style=\\'padding:8px;border:1px solid #ccc\\'><strong>Elementos</strong></td>'     + '<td style=\\'padding:8px;border:1px solid #ccc;text-align:right\\'><strong>Cantidades</strong></td>'     + '<td style=\\'padding:8px;border:1px solid #ccc;text-align:right\\'><strong>Valor unitario neto</strong></td>'     + '</tr>'     + filas     + '<tr style=\\'background:#f0f0f0\\'>'     + '<td colspan=\\'2\\' style=\\'padding:8px;border:1px solid #ccc\\'><strong>Subtotal neto</strong></td>'     + '<td style=\\'padding:8px;border:1px solid #ccc;text-align:right\\'><strong>$' + subG.toLocaleString('es-CL') + '</strong></td>'     + '</tr>'     + '<tr>'     + '<td colspan=\\'2\\' style=\\'padding:8px;border:1px solid #ccc\\'>IVA (19%)</td>'     + '<td style=\\'padding:8px;border:1px solid #ccc;text-align:right\\'>$' + iva.toLocaleString('es-CL') + '</td>'     + '</tr>'     + '<tr style=\\'background:#d0e4f5\\'>'     + '<td colspan=\\'2\\' style=\\'padding:8px;border:1px solid #ccc\\'><strong>TOTAL</strong></td>'     + '<td style=\\'padding:8px;border:1px solid #ccc;text-align:right\\'><strong>$' + total.toLocaleString('es-CL') + '</strong></td>'     + '</tr></table>'     + '<p style=\\'color:#1a3a5c\\'>'     + '<strong>TIEMPO DE PRODUCCION TOTAL: ' + plazo + '</strong><br>'     + '<strong>IMPRENTA MMG SA / RUT: 76.281.107-3</strong><br>'     + '<strong>Cuenta corriente: Banco de Chile N°174-06098-10 / imprentammg@gmail.com</strong><br>'     + '<strong>Manuel Antonio Tocornal 1912, Santiago / Fono: 225548531 / 225518212 / 225251468</strong>'     + '</p>'     + '<br><table width=\\'100%\\'><tr><td align=\\'center\\' style=\\'color:#555;padding-top:30px;font-size:13px\\'>'     + 'Marta Silva Morales<br>IMPRENTA MMG'     + '</td></tr></table>'     + '<hr style=\\'margin:20px 0;border:none;border-top:1px solid #ccc\\'>'     + '<p style=\\'font-size:11px;color:#777\\'>Dirección M.A. Tocornal 1912 – Santiago- teléfonos: 25548531 – 25518212 – 99 8188987 &nbsp;&nbsp; E-mail: imprentammg@gmail.com</p>'     + '</div>'; } const out = Object.assign({}, eD, { cotizacion_automatica: encontrado, htmlCotizacion: htmlCotiz, Plazo_Produccion: plazo }); if (encontrado) {   out.Estado_Cotiz = 'Generada automaticamente';   out.Subtotal_General = subG; out.IVA_19 = iva; out.Total = total;   if (matches[0]) { out.Producto_1=matches[0].producto; out.Cantidad_1=matches[0].cantidad; out.ValorUnit_1=matches[0].valorUnit; out.Subtotal_1=matches[0].subtotal; }   if (matches[1]) { out.Producto_2=matches[1].producto; out.Cantidad_2=matches[1].cantidad; out.ValorUnit_2=matches[1].valorUnit; out.Subtotal_2=matches[1].subtotal; }   if (matches[2]) { out.Producto_3=matches[2].producto; out.Cantidad_3=matches[2].cantidad; out.ValorUnit_3=matches[2].valorUnit; out.Subtotal_3=matches[2].subtotal; }   if (matches[3]) { out.Producto_4=matches[3].producto; out.Cantidad_4=matches[3].cantidad; out.ValorUnit_4=matches[3].valorUnit; out.Subtotal_4=matches[3].subtotal; }   if (matches[4]) { out.Producto_5=matches[4].producto; out.Cantidad_5=matches[4].cantidad; out.ValorUnit_5=matches[4].valorUnit; out.Subtotal_5=matches[4].subtotal; } } return [{json: out}];"
+        "jsCode": "const todos = $input.all(); const emailItem = todos.find(function(i) { return i.json.LineaNegocio !== undefined; }); const precios = todos.filter(function(i) { return i.json.Keywords !== undefined; }); const eD = emailItem ? emailItem.json : $('Preparar cotizacion Merchandising').first().json; const texto = ((eD.Asunto_Pedido || '') + ' ' + (eD.Cuerpo_Correo || '')).toLowerCase(); function numCerca(txt, kw) {   const re = new RegExp('(\\\\d{1,5})\\\\s*' + kw + '|' + kw + '\\\\s*(\\\\d{1,5})', 'i');   const m = txt.match(re);   if (m) return parseInt(m[1] || m[2]);   const nums = txt.match(/\\d{2,5}/g);   return nums ? parseInt(nums[0]) : 1; } const matches = []; const usados = {}; for (let pi = 0; pi < precios.length; pi++) {   const pj = precios[pi].json;   const kws = (pj.Keywords || '').toLowerCase().split(',');   for (let ki = 0; ki < kws.length; ki++) {     const kw = kws[ki].trim();     if (!kw || usados[pj.Producto]) continue;     if (texto.indexOf(kw) >= 0) {       usados[pj.Producto] = true;       const cnt = numCerca(texto, kw);       const pu = parseFloat(String(pj.Precio_Unitario_Neto || '0').replace(/\\./g,'').replace(',','.')) || 0;       matches.push({ producto: pj.Producto || kw.toUpperCase(), cantidad: cnt, valorUnit: pu, subtotal: cnt * pu, tiempo: pj.Tiempo_Produccion || '3-5 dias habiles' });       break;     }   } } const encontrado = matches.length > 0; const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']; const now = new Date(); const fechaF = eD.Fecha_Formal || ('Santiago, ' + now.getDate() + ' de ' + meses[now.getMonth()] + ' de ' + now.getFullYear()); const plazo = encontrado ? matches[0].tiempo : '3-5 dias habiles'; function clp(n) { return '$' + Number(n).toLocaleString('es-CL'); } let filas = ''; let neto = 0; for (let mi = 0; mi < matches.length; mi++) {   const m = matches[mi]; neto += m.subtotal;   filas += '<tr>'     + '<td style=\\'padding:7px 9px;border:1px solid #bbb\\'>' + m.producto + '</td>'     + '<td style=\\'padding:7px 9px;border:1px solid #bbb;text-align:center\\'>' + m.cantidad + '</td>'     + '<td style=\\'padding:7px 9px;border:1px solid #bbb;text-align:right\\'>' + clp(m.valorUnit) + '</td>'     + '<td style=\\'padding:7px 9px;border:1px solid #bbb;text-align:right\\'>' + clp(m.subtotal) + '</td>'     + '</tr>'; } const iva = Math.round(neto * 0.19); const valorFinal = neto + iva; let htmlCotiz = ''; if (encontrado) {   htmlCotiz =     '<div style=\\'font-family:Arial,Helvetica,sans-serif;max-width:720px;margin:0 auto;padding:24px;color:#333\\'>'     + '<table width=\\'100%\\' cellpadding=\\'0\\' cellspacing=\\'0\\' style=\\'margin-bottom:14px\\'><tr>'     + '<td style=\\'vertical-align:middle\\'><img src=\\'YOUR_LOGO_URL\\' alt=\\'Imprenta MMG\\' style=\\'height:64px\\'></td>'     + '<td align=\\'right\\' style=\\'vertical-align:top;font-size:13px;color:#555\\'>' + fechaF + '</td>'     + '</tr></table>'     + '<h2 style=\\'color:#1a5f9e;border-bottom:2px solid #1a5f9e;padding-bottom:5px;margin:6px 0 14px\\'>PRESUPUESTO N° ' + eD.N_Cotiz + '</h2>'     + '<p style=\\'margin:4px 0\\'><b>Sres.:</b> ' + eD.Cliente + '<br>'     + '<b>At:</b> ' + eD.Atencion + '<br>'     + '<b>Presente</b></p>'     + '<p>Tenemos el agrado de cotizarle(s) lo siguiente:</p>'     + '<table cellpadding=\\'0\\' cellspacing=\\'0\\' style=\\'border-collapse:collapse;width:100%;margin:14px 0;font-size:14px\\'>'     + '<tr style=\\'background:#1a5f9e;color:#fff\\'>'     + '<td style=\\'padding:8px 9px;border:1px solid #1a5f9e\\'><b>Item</b></td>'     + '<td style=\\'padding:8px 9px;border:1px solid #1a5f9e;text-align:center\\'><b>Cantidad</b></td>'     + '<td style=\\'padding:8px 9px;border:1px solid #1a5f9e;text-align:right\\'><b>Valor unitario</b></td>'     + '<td style=\\'padding:8px 9px;border:1px solid #1a5f9e;text-align:right\\'><b>Valor total</b></td>'     + '</tr>' + filas     + '<tr><td colspan=\\'3\\' style=\\'padding:7px 9px;border:1px solid #bbb;text-align:right\\'>Neto</td>'     + '<td style=\\'padding:7px 9px;border:1px solid #bbb;text-align:right\\'>' + clp(neto) + '</td></tr>'     + '<tr><td colspan=\\'3\\' style=\\'padding:7px 9px;border:1px solid #bbb;text-align:right\\'>IVA (19%)</td>'     + '<td style=\\'padding:7px 9px;border:1px solid #bbb;text-align:right\\'>' + clp(iva) + '</td></tr>'     + '<tr style=\\'background:#d6e6f5\\'><td colspan=\\'3\\' style=\\'padding:8px 9px;border:1px solid #bbb;text-align:right\\'><b>Valor final</b></td>'     + '<td style=\\'padding:8px 9px;border:1px solid #bbb;text-align:right\\'><b>' + clp(valorFinal) + '</b></td></tr>'     + '</table>'     + '<p style=\\'margin:4px 0\\'><b>Tiempo de producción:</b> ' + plazo + '<br>'     + '<b>Validez del Presupuesto:</b> 7 días.<br>'     + '<b>Condiciones de venta:</b> A convenir.</p>'     + '<table width=\\'100%\\' cellpadding=\\'0\\' cellspacing=\\'0\\' style=\\'margin-top:14px;font-size:13px;color:#1a5f9e;border-top:1px solid #ccc;padding-top:10px\\'><tr><td>'     + '<b>IMPRENTA MMG S.A.</b> &nbsp;|&nbsp; RUT: 76.281.107-3<br>'     + 'Banco de Chile &nbsp;|&nbsp; Cta. Cte. N° 174-06098-10<br>'     + 'Manuel Antonio Tocornal 1912, Santiago<br>'     + 'Fono: 25548531 / 25518212 / 25513167<br>'     + 'imprentammg@gmail.com &nbsp;-&nbsp; www.imprentammg.cl'     + '</td></tr></table>'     + '<table width=\\'100%\\' style=\\'margin-top:26px\\'><tr><td align=\\'center\\' style=\\'color:#555;font-size:13px\\'>'     + '________________________<br>Marta Silva Morales<br>IMPRENTA MMG'     + '</td></tr></table>'     + '<hr style=\\'margin:18px 0;border:none;border-top:1px solid #ddd\\'>'     + '<p style=\\'font-size:11px;color:#888;text-align:center\\'>Dirección M.A. Tocornal 1912 – Santiago - teléfonos: 25548531 – 25518212 – 99 8188987 &nbsp; E-mail: imprentammg@gmail.com</p>'     + '</div>'; } const out = Object.assign({}, eD, { cotizacion_automatica: encontrado, htmlCotizacion: htmlCotiz, Plazo_Produccion: plazo }); if (encontrado) {   out.Estado_Cotiz = 'Generada automaticamente';   out.Subtotal_General = neto; out.IVA_19 = iva; out.Total = valorFinal;   for (let k = 0; k < 5; k++) { const m = matches[k]; if (m) { out['Producto_'+(k+1)]=m.producto; out['Cantidad_'+(k+1)]=m.cantidad; out['ValorUnit_'+(k+1)]=m.valorUnit; out['Subtotal_'+(k+1)]=m.subtotal; } } } return [{json: out}];"
       }
     },
     {
@@ -1524,7 +1570,11 @@
             }
           }
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "onError": "continueErrorOutput"
     },
     {
       "id": "n6-pdf",
@@ -1533,7 +1583,7 @@
       "typeVersion": 2,
       "position": [
         3360,
-        0
+        -60
       ],
       "credentials": {
         "gmailOAuth2": {
@@ -1555,7 +1605,11 @@
             ]
           }
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "sticky-pdf",
@@ -1567,10 +1621,51 @@
         -200
       ],
       "parameters": {
-        "content": "## Cotización PDF (PDFShift)\nSolo se ejecuta para Merchandising cuando el producto SI esta en la 'Lista de Precios Merchandising'.\nConvierte el HTML a PDF y lo adjunta al correo.\n\n**Credencial requerida:** Header Auth\nNombre header: `X-API-Key`\nValor: API key de pdfshift.io (free tier 50/mes)",
-        "height": 220,
+        "content": "## Cotización PDF (PDFShift)\nSolo Merchandising cuando el producto SI esta en 'Lista de Precios Merchandising'.\nConvierte HTML -> PDF y lo adjunta. Si PDFShift falla, hace fallback a email HTML.\n\n**Credencial:** Header Auth, header `X-API-Key`, valor = API key de pdfshift.io (free 50/mes).\n\n**Logo:** reemplazar `YOUR_LOGO_URL` por la URL publica del logo imprentammg (subir a la web de la imprenta o Drive publico).",
+        "height": 240,
         "width": 360,
         "color": 2
+      }
+    },
+    {
+      "id": "n-cot-fallback",
+      "name": "Fallback cotizacion HTML (sin PDF)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        3360,
+        90
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail - La Imprenta Verde"
+        }
+      },
+      "parameters": {
+        "sendTo": "={{ $('Preparar notificacion cliente').item.json.Email_Cliente }}",
+        "subject": "={{ $('Preparar notificacion cliente').item.json.asuntoCliente }}",
+        "emailType": "html",
+        "message": "={{ $('Preparar notificacion cliente').item.json.htmlCotizacion }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "n-wa-parse",
+      "name": "Normalizar mensaje WhatsApp",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        280,
+        1100
+      ],
+      "disabled": true,
+      "parameters": {
+        "jsCode": "// Normaliza un mensaje entrante de WhatsApp (WAHA / Evolution API / WhatsApp Cloud) // al MISMO formato que produce 'Parsear correo y generar ID OT', para reutilizar // toda la logica de clasificacion, cotizacion y notificacion del Carril 1. const item = $input.first(); const d = item.json || {}; const body = d.body || {}; const msg = d.message || body.message || {}; let texto = d.text || body.text || (msg.text && msg.text.body) || msg.conversation || d.caption || 'Consulta por WhatsApp'; texto = String(texto); const telefono = d.from || body.from || msg.from || d.phone || d.chatId || ''; const nombre = d.pushName || d.notifyName || body.pushName || (telefono ? ('Cliente WhatsApp ' + telefono) : 'Cliente WhatsApp'); const now = new Date(); const pad = (n) => String(n).padStart(2, '0'); const dateStr = now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()); const seq = String((now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds()) % 1000).padStart(3, '0'); const idOT = 'OT-' + dateStr + '-' + seq; const asunto = texto.toLowerCase(); const addBiz = (dt, n) => { const r = new Date(dt); let a=0; while(a<n){r.setDate(r.getDate()+1);const w=r.getDay();if(w!==0&&w!==6)a++;} return r; }; const fe = addBiz(now,2).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'}); let area='Sin Asignar', disenador='disenador1@laimprentaverde.cl', lineaNegocio='Papeleria'; if (asunto.match('polera|camiseta|ropa|polo|buzo|chaleco|bordado')) { area='Ropa'; disenador='ropa@laimprentaverde.cl'; } else if (asunto.match('cuaderno|agenda|anillado|espiral|bloc|libreta')) { area='Libreria'; disenador='libreria@laimprentaverde.cl'; } else if (asunto.match('plastificado|laminado|carpeta|oficio|polimate')) { area='Plastificados'; disenador='plastificados@laimprentaverde.cl'; } else if (asunto.match('taza|lapiz|lapicera|pendrive|gift|regalo|mochila|souvenir|gorro|termos|termo|lanyard|credencial|bolsa')) { area='Merchandising'; disenador='merchandising@laimprentaverde.cl'; lineaNegocio='Merchandising'; } const emailEnTexto = (texto.match(/[\\w.+-]+@[\\w-]+\\.[\\w.-]+/) || [''])[0]; return [{json:{ID_OT:idOT,Fecha_Ingreso:now.toISOString(),Cliente:nombre,Email_Cliente:emailEnTexto,Telefono_WhatsApp:telefono,Asunto_Pedido:texto.slice(0,120),Cuerpo_Correo:texto,Area:area,Disenador_Asignado:disenador,Estado:'Recibido',Fecha_Entrega_Estimada:fe,LineaNegocio:lineaNegocio,Canal:'WhatsApp',Va_A_Externo:'No',Proveedor_Externo:'',Fecha_Limite_Retorno:'',Fecha_Retorno_Real:'',Modalidad_Despacho:'',Notas:'Ingreso via WhatsApp',Fecha_Cierre:'',_Sistema_Flag:''}}];"
       }
     }
   ],
@@ -1931,6 +2026,35 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Fallback cotizacion HTML (sin PDF)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PLACEHOLDER WhatsApp Business": {
+      "main": [
+        [
+          {
+            "node": "Normalizar mensaje WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar mensaje WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Clasificar linea de negocio",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     }
@@ -1949,6 +2073,6 @@
     }
   ],
   "triggerCount": 3,
-  "updatedAt": "2026-06-08T00:00:00.000Z",
+  "updatedAt": "2026-06-08T12:00:00.000Z",
   "versionId": "1"
 }
