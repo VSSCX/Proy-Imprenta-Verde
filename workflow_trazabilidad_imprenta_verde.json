@@ -88,7 +88,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "const item = $input.first(); const d = item.json; const now = new Date(); const pad = (n) => String(n).padStart(2, '0'); const dateStr = now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()); const sec = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds(); const seq = String(sec % 1000).padStart(3, '0'); const idOT = 'OT-' + dateStr + '-' + seq; const from = d.from || ''; const ai = from.indexOf('<'); const emailCliente = ai >= 0 ? from.slice(ai+1, from.indexOf('>', ai)) : from; const nombre = (ai >= 0 ? from.slice(0, ai) : emailCliente.split('@')[0]).trim() || 'Cliente'; const asuntoRaw = d.subject || 'Sin asunto'; const asunto = asuntoRaw.toLowerCase(); const addBiz = (dt, n) => { const r = new Date(dt); let a=0; while(a<n){r.setDate(r.getDate()+1);const w=r.getDay();if(w!==0&&w!==6)a++;} return r; }; const fe = addBiz(now,2).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'}); let area = 'Sin Asignar'; let disenador = 'vsotoc@fen.uchile.cl'; let lineaNegocio = 'Papeleria'; if (asunto.match('polera|camiseta|ropa|polo|buzo|chaleco|bordado')) { area='Ropa'; disenador='vsotoc@fen.uchile.cl'; } else if (asunto.match('cuaderno|agenda|anillado|espiral|bloc|libreta')) { area='Libreria'; disenador='vsotoc@fen.uchile.cl'; } else if (asunto.match('plastificado|laminado|carpeta|oficio|polimate')) { area='Plastificados'; disenador='vsotoc@fen.uchile.cl'; } else if (asunto.match('taza|lapiz|lapicera|pendrive|gift|regalo|mochila|souvenir|gorro|termos|termo|lanyard|credencial|bolsa')) { area='Merchandising'; disenador='vsotoc@fen.uchile.cl'; lineaNegocio='Merchandising'; } return [{json:{ID_OT:idOT,Fecha_Ingreso:now.toISOString(),Cliente:nombre,Email_Cliente:emailCliente,Asunto_Pedido:asuntoRaw,Cuerpo_Correo:d.text||d.snippet||'',Area:area,Disenador_Asignado:disenador,Estado:'Recibido',Fecha_Entrega_Estimada:fe,LineaNegocio:lineaNegocio,Canal:'Email',Va_A_Externo:'No',Proveedor_Externo:'',Fecha_Limite_Retorno:'',Fecha_Retorno_Real:'',Modalidad_Despacho:'',Notas:'',Fecha_Cierre:'',_Sistema_Flag:''}}];"
+        "jsCode": "const item = $input.first(); const d = item.json; const now = new Date(); const pad = (n) => String(n).padStart(2, '0'); const dateStr = now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()); const sec = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds(); const seq = String(sec % 1000).padStart(3, '0'); const idOT = 'OT-' + dateStr + '-' + seq; const from = d.from || ''; const ai = from.indexOf('<'); const emailCliente = ai >= 0 ? from.slice(ai+1, from.indexOf('>', ai)) : from; const nombre = (ai >= 0 ? from.slice(0, ai) : emailCliente.split('@')[0]).trim() || 'Cliente'; const asuntoRaw = d.subject || 'Sin asunto'; const asunto = asuntoRaw.toLowerCase(); const addBiz = (dt, n) => { const r = new Date(dt); let a=0; while(a<n){r.setDate(r.getDate()+1);const w=r.getDay();if(w!==0&&w!==6)a++;} return r; }; const fe = addBiz(now,2).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'}); let area = 'Sin Asignar'; let disenador = 'vsotoc@fen.uchile.cl'; let lineaNegocio = 'Papeleria'; if (asunto.match('polera|camiseta|ropa|polo|buzo|chaleco|bordado')) { area='Ropa'; disenador='vsotoc@fen.uchile.cl'; } else if (asunto.match('cuaderno|agenda|anillado|espiral|bloc|libreta')) { area='Libreria'; disenador='vsotoc@fen.uchile.cl'; } else if (asunto.match('plastificado|laminado|carpeta|oficio|polimate')) { area='Plastificados'; disenador='vsotoc@fen.uchile.cl'; } else if (asunto.match('taza|lapiz|lapicera|pendrive|gift|regalo|mochila|souvenir|gorro|termos|termo|lanyard|credencial|bolsa')) { area='Merchandising'; disenador='vsotoc@fen.uchile.cl'; lineaNegocio='Merchandising'; } return [{json:{ID_OT:idOT,Message_ID:(d.id||d.messageId||''),Thread_ID:(d.threadId||''),Fecha_Ingreso:now.toISOString(),Cliente:nombre,Email_Cliente:emailCliente,Asunto_Pedido:asuntoRaw,Cuerpo_Correo:d.text||d.snippet||'',Area:area,Disenador_Asignado:disenador,Estado:'Recibido',Fecha_Entrega_Estimada:fe,LineaNegocio:lineaNegocio,Canal:'Email',Va_A_Externo:'No',Proveedor_Externo:'',Fecha_Limite_Retorno:'',Fecha_Retorno_Real:'',Modalidad_Despacho:'',Notas:'',Fecha_Cierre:'',_Sistema_Flag:''}}];"
       }
     },
     {
@@ -1676,6 +1676,78 @@
       "parameters": {
         "jsCode": "// Normaliza un mensaje entrante de WhatsApp (WAHA / Evolution API / WhatsApp Cloud) // al MISMO formato que produce 'Parsear correo y generar ID OT', para reutilizar // toda la logica de clasificacion, cotizacion y notificacion del Carril 1. const item = $input.first(); const d = item.json || {}; const body = d.body || {}; const msg = d.message || body.message || {}; let texto = d.text || body.text || (msg.text && msg.text.body) || msg.conversation || d.caption || 'Consulta por WhatsApp'; texto = String(texto); const telefono = d.from || body.from || msg.from || d.phone || d.chatId || ''; const nombre = d.pushName || d.notifyName || body.pushName || (telefono ? ('Cliente WhatsApp ' + telefono) : 'Cliente WhatsApp'); const now = new Date(); const pad = (n) => String(n).padStart(2, '0'); const dateStr = now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()); const seq = String((now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds()) % 1000).padStart(3, '0'); const idOT = 'OT-' + dateStr + '-' + seq; const asunto = texto.toLowerCase(); const addBiz = (dt, n) => { const r = new Date(dt); let a=0; while(a<n){r.setDate(r.getDate()+1);const w=r.getDay();if(w!==0&&w!==6)a++;} return r; }; const fe = addBiz(now,2).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'}); let area='Sin Asignar', disenador='vsotoc@fen.uchile.cl', lineaNegocio='Papeleria'; if (asunto.match('polera|camiseta|ropa|polo|buzo|chaleco|bordado')) { area='Ropa'; disenador='vsotoc@fen.uchile.cl'; } else if (asunto.match('cuaderno|agenda|anillado|espiral|bloc|libreta')) { area='Libreria'; disenador='vsotoc@fen.uchile.cl'; } else if (asunto.match('plastificado|laminado|carpeta|oficio|polimate')) { area='Plastificados'; disenador='vsotoc@fen.uchile.cl'; } else if (asunto.match('taza|lapiz|lapicera|pendrive|gift|regalo|mochila|souvenir|gorro|termos|termo|lanyard|credencial|bolsa')) { area='Merchandising'; disenador='vsotoc@fen.uchile.cl'; lineaNegocio='Merchandising'; } const emailEnTexto = (texto.match(/[\\w.+-]+@[\\w-]+\\.[\\w.-]+/) || [''])[0]; return [{json:{ID_OT:idOT,Fecha_Ingreso:now.toISOString(),Cliente:nombre,Email_Cliente:emailEnTexto,Telefono_WhatsApp:telefono,Asunto_Pedido:texto.slice(0,120),Cuerpo_Correo:texto,Area:area,Disenador_Asignado:disenador,Estado:'Recibido',Fecha_Entrega_Estimada:fe,LineaNegocio:lineaNegocio,Canal:'WhatsApp',Va_A_Externo:'No',Proveedor_Externo:'',Fecha_Limite_Retorno:'',Fecha_Retorno_Real:'',Modalidad_Despacho:'',Notas:'Ingreso via WhatsApp',Fecha_Cierre:'',_Sistema_Flag:''}}];"
       }
+    },
+    {
+      "id": "n-label-in",
+      "name": "Etiquetar correo: Pedido recibido",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        560,
+        200
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail - La Imprenta Verde"
+        }
+      },
+      "parameters": {
+        "resource": "message",
+        "operation": "addLabels",
+        "messageId": "={{ $json.Message_ID }}",
+        "labelIds": [
+          "YOUR_LABEL_ID_PEDIDO_RECIBIDO"
+        ]
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "n-label-cot",
+      "name": "Etiquetar correo: Cotizacion enviada",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        3640,
+        20
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail - La Imprenta Verde"
+        }
+      },
+      "parameters": {
+        "resource": "message",
+        "operation": "addLabels",
+        "messageId": "={{ $('Parsear correo y generar ID OT').first().json.Message_ID }}",
+        "labelIds": [
+          "YOUR_LABEL_ID_COTIZACION_ENVIADA"
+        ]
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "sticky-labels",
+      "name": "Sticky - Etiquetas Gmail",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3600,
+        -200
+      ],
+      "parameters": {
+        "content": "## Etiquetas en Gmail\nEl flujo marca cada correo:\n- **Pedido recibido**: al leer el pedido.\n- **Cotizacion enviada**: al mandar la cotizacion automatica.\n\n**Antes de activar:** crear ambas etiquetas en Gmail (Configuracion > Etiquetas > Crear) y luego, en cada nodo 'Etiquetar correo...', seleccionarlas del desplegable (reemplaza los placeholders YOUR_LABEL_ID_*).",
+        "height": 200,
+        "width": 340,
+        "color": 6
+      }
     }
   ],
   "connections": {
@@ -1695,6 +1767,11 @@
         [
           {
             "node": "Clasificar linea de negocio",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Etiquetar correo: Pedido recibido",
             "type": "main",
             "index": 0
           }
@@ -2055,6 +2132,28 @@
         [
           {
             "node": "Clasificar linea de negocio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar cotizacion PDF al cliente": {
+      "main": [
+        [
+          {
+            "node": "Etiquetar correo: Cotizacion enviada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fallback cotizacion HTML (sin PDF)": {
+      "main": [
+        [
+          {
+            "node": "Etiquetar correo: Cotizacion enviada",
             "type": "main",
             "index": 0
           }

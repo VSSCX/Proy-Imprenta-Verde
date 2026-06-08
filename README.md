@@ -96,6 +96,8 @@ Al importar, conecta cada nodo a su credencial. Quedan estos textos por reemplaz
 | `YOUR_PDFSHIFT_CREDENTIAL_ID` | Credencial Header Auth | Nodo "Generar PDF cotizacion (PDFShift)" |
 | `YOUR_SPREADSHEET_ID` | ID del documento Sheets | El ID está en la URL del Sheets, entre `/d/` y `/edit` |
 | `YOUR_SHEETS_URL` | URL completa del Sheets | Aparece en los enlaces "Ver en Google Sheets" de los correos |
+| `YOUR_LABEL_ID_PEDIDO_RECIBIDO` | Etiqueta de Gmail | Nodo "Etiquetar correo: Pedido recibido" (ver paso 6) |
+| `YOUR_LABEL_ID_COTIZACION_ENVIADA` | Etiqueta de Gmail | Nodo "Etiquetar correo: Cotizacion enviada" (ver paso 6) |
 
 > El **logo** ya viene embebido en base64 dentro del workflow — no requiere hosting.
 
@@ -104,6 +106,22 @@ Para **pruebas**, todas las notificaciones internas están dirigidas a
 `vsotoc@fen.uchile.cl`. En **producción**, reemplaza esa dirección por las casillas
 reales (secretarías, diseñadores por área, etc.). Es un único find/replace en el JSON
 o editable nodo por nodo.
+
+### 6. Etiquetas de Gmail (organización de la bandeja)
+El flujo etiqueta automáticamente cada correo entrante:
+- **"Pedido recibido"** → apenas lee y procesa el correo del pedido.
+- **"Cotización enviada"** → cuando manda la cotización automática de Merchandising.
+
+Antes de activar:
+1. En Gmail: **Configuración → Etiquetas → Crear etiqueta** → crea las dos
+   (con el nombre que prefieras).
+2. En n8n, abre los nodos **"Etiquetar correo: Pedido recibido"** y
+   **"Etiquetar correo: Cotizacion enviada"** y selecciona cada etiqueta del
+   desplegable (reemplaza los placeholders `YOUR_LABEL_ID_*`).
+
+> Las etiquetas solo aplican a correos (no a WhatsApp). En Papelería **no** se pone
+> "Cotización enviada" automáticamente, porque esa cotización la envía el encargado
+> a mano.
 
 ---
 
