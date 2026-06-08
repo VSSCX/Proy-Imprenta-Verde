@@ -76,6 +76,18 @@ Producto | Keywords | Precio_Unitario_Neto | Tiempo_Produccion
   (ej. `taza,tazon,mug`). El sistema busca estas palabras en el asunto/cuerpo.
 - `Precio_Unitario_Neto`: valor neto en CLP (ej. `2500`).
 
+> 💡 **Para probar el prototipo ya:** importa `ejemplo_lista_precios_merchandising.csv`
+> en esta pestaña (Archivo → Importar → Subir). Trae 12 productos de ejemplo con
+> precios realistas, listos para testear el flujo de inmediato.
+
+> 🔧 **Cuando llegue la lista de precios real de la imprenta:** no es necesario
+> reformatearla a estas columnas. La adaptación del código a la estructura real se
+> hace en **2 nodos** únicamente:
+> - `Leer lista de precios Merchandising` (qué pestaña/columnas leer)
+> - `Calcular precios y generar cotizacion` (de qué columnas saca producto / keyword / precio)
+>
+> Es un cambio pequeño y localizado: se ajusta una vez que la imprenta apruebe el prototipo.
+
 ### 2. Crear credenciales en n8n
 - **Gmail OAuth2** → "Gmail - La Imprenta Verde"
 - **Google Sheets OAuth2** → "Google Sheets - La Imprenta Verde"
@@ -162,5 +174,6 @@ Antes de activar:
 | Archivo | Descripción |
 |---------|-------------|
 | `workflow_trazabilidad_imprenta_verde.json` | Workflow completo de n8n (importar este). |
+| `ejemplo_lista_precios_merchandising.csv` | Lista de precios de ejemplo para probar el prototipo. |
 | `Imprenta_MMG-removebg-preview.png` | Logo original (ya embebido en el JSON). |
 | `.claude/commands/n8n.md` | Guía/skill de patrones n8n para mantención. |
