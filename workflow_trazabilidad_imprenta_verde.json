@@ -407,7 +407,7 @@
       "typeVersion": 2,
       "position": [
         2800,
-        -80
+        -160
       ],
       "credentials": {
         "gmailOAuth2": {
@@ -429,8 +429,8 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2,
       "position": [
-        2800,
-        0
+        3080,
+        160
       ],
       "credentials": {
         "gmailOAuth2": {
@@ -453,7 +453,7 @@
       "typeVersion": 2,
       "position": [
         2800,
-        80
+        -60
       ],
       "credentials": {
         "gmailOAuth2": {
@@ -1403,7 +1403,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "const d = $input.first().json; const esMerch = d.LineaNegocio === 'Merchandising'; let asuntoCliente, mensajeCliente; if (esMerch && d.cotizacion_automatica) {   asuntoCliente = 'Cotización N° ' + d.N_Cotiz + ' | La Imprenta Verde';   mensajeCliente = d.htmlCotizacion; } else if (esMerch) {   asuntoCliente = 'Consulta recibida - Folio ' + d.ID_OT + ' | La Imprenta Verde';   mensajeCliente =     '<div style=\\'font-family:Arial,sans-serif;max-width:600px\\'>'     + '<p>Hola <b>' + d.Cliente + '</b>!</p>'     + '<p>Recibimos tu consulta y ya quedo registrada. Estamos revisando disponibilidad y precios, y te enviamos la cotizacion formal muy pronto.</p>'     + '<table border=\\'1\\' cellpadding=\\'8\\' cellspacing=\\'0\\' style=\\'border-collapse:collapse;width:100%;margin:16px 0\\'>'     + '<tr style=\\'background:#f0f7f4\\'><td><b>Numero de folio</b></td><td><b>' + d.ID_OT + '</b></td></tr>'     + '<tr><td>Consulta</td><td>' + d.Asunto_Pedido + '</td></tr>'     + '</table>'     + '<p>Cualquier duda escribenos a <a href=\\'mailto:secretarias@laimprentaverde.cl\\'>secretarias@laimprentaverde.cl</a>.</p>'     + '<p>Gracias por preferirnos!</p>'     + '<hr style=\\'border:none;border-top:1px solid #eee;margin:16px 0\\'>'     + '<p style=\\'color:#888;font-size:12px\\'>La Imprenta Verde | pedidos@laimprentaverde.cl | Mensaje automatico.</p>'     + '</div>'; } else {   asuntoCliente = 'Consulta recibida - Folio ' + d.ID_OT + ' | La Imprenta Verde';   mensajeCliente =     '<div style=\\'font-family:Arial,sans-serif;max-width:600px\\'>'     + '<p>Hola <b>' + d.Cliente + '</b>!</p>'     + '<p>Recibimos tu consulta y ya esta registrada en nuestro sistema. Nuestro encargado la va a revisar y te va a contactar a la brevedad con la cotizacion y los plazos de entrega.</p>'     + '<table border=\\'1\\' cellpadding=\\'8\\' cellspacing=\\'0\\' style=\\'border-collapse:collapse;width:100%;margin:16px 0\\'>'     + '<tr style=\\'background:#f0f7f4\\'><td><b>Numero de folio</b></td><td><b>' + d.ID_OT + '</b></td></tr>'     + '<tr><td>Descripcion</td><td>' + d.Asunto_Pedido + '</td></tr>'     + '</table>'     + '<p>Cualquier duda escribenos a <a href=\\'mailto:secretarias@laimprentaverde.cl\\'>secretarias@laimprentaverde.cl</a>.</p>'     + '<p>Gracias por contactarnos!</p>'     + '<hr style=\\'border:none;border-top:1px solid #eee;margin:16px 0\\'>'     + '<p style=\\'color:#888;font-size:12px\\'>La Imprenta Verde | pedidos@laimprentaverde.cl | Mensaje automatico.</p>'     + '</div>'; } return [{json:{...d, asuntoCliente: asuntoCliente, mensajeCliente: mensajeCliente}}];"
+        "jsCode": "const d = $input.first().json; const esMerch = d.LineaNegocio === 'Merchandising'; let asuntoCliente, mensajeCliente; if (esMerch && d.cotizacion_automatica) {   asuntoCliente = 'Cotización N° ' + d.N_Cotiz + ' | La Imprenta Verde';   mensajeCliente =     '<div style=\\'font-family:Arial,sans-serif;max-width:600px\\'>'     + '<p>Estimado/a <b>' + d.Cliente + '</b>,</p>'     + '<p>Junto con saludar, adjuntamos en formato PDF la cotización <b>N° ' + d.N_Cotiz + '</b> solicitada.</p>'     + '<p>Quedamos atentos a su confirmación para proceder con la producción. Cualquier consulta, no dude en responder este correo.</p>'     + '<p>Saludos cordiales,<br><b>La Imprenta Verde</b></p>'     + '<hr style=\\'border:none;border-top:1px solid #eee;margin:16px 0\\'>'     + '<p style=\\'color:#888;font-size:12px\\'>La Imprenta Verde | pedidos@laimprentaverde.cl</p>'     + '</div>'; } else if (esMerch) {   asuntoCliente = 'Consulta recibida - Folio ' + d.ID_OT + ' | La Imprenta Verde';   mensajeCliente =     '<div style=\\'font-family:Arial,sans-serif;max-width:600px\\'>'     + '<p>Hola <b>' + d.Cliente + '</b>!</p>'     + '<p>Recibimos tu consulta y ya quedo registrada. Estamos revisando disponibilidad y precios, y te enviamos la cotizacion formal muy pronto.</p>'     + '<table border=\\'1\\' cellpadding=\\'8\\' cellspacing=\\'0\\' style=\\'border-collapse:collapse;width:100%;margin:16px 0\\'>'     + '<tr style=\\'background:#f0f7f4\\'><td><b>Numero de folio</b></td><td><b>' + d.ID_OT + '</b></td></tr>'     + '<tr><td>Consulta</td><td>' + d.Asunto_Pedido + '</td></tr>'     + '</table>'     + '<p>Cualquier duda escribenos a <a href=\\'mailto:secretarias@laimprentaverde.cl\\'>secretarias@laimprentaverde.cl</a>.</p>'     + '<p>Gracias por preferirnos!</p>'     + '<hr style=\\'border:none;border-top:1px solid #eee;margin:16px 0\\'>'     + '<p style=\\'color:#888;font-size:12px\\'>La Imprenta Verde | pedidos@laimprentaverde.cl | Mensaje automatico.</p>'     + '</div>'; } else {   asuntoCliente = 'Consulta recibida - Folio ' + d.ID_OT + ' | La Imprenta Verde';   mensajeCliente =     '<div style=\\'font-family:Arial,sans-serif;max-width:600px\\'>'     + '<p>Hola <b>' + d.Cliente + '</b>!</p>'     + '<p>Recibimos tu consulta y ya esta registrada en nuestro sistema. Nuestro encargado la va a revisar y te va a contactar a la brevedad con la cotizacion y los plazos de entrega.</p>'     + '<table border=\\'1\\' cellpadding=\\'8\\' cellspacing=\\'0\\' style=\\'border-collapse:collapse;width:100%;margin:16px 0\\'>'     + '<tr style=\\'background:#f0f7f4\\'><td><b>Numero de folio</b></td><td><b>' + d.ID_OT + '</b></td></tr>'     + '<tr><td>Descripcion</td><td>' + d.Asunto_Pedido + '</td></tr>'     + '</table>'     + '<p>Cualquier duda escribenos a <a href=\\'mailto:secretarias@laimprentaverde.cl\\'>secretarias@laimprentaverde.cl</a>.</p>'     + '<p>Gracias por contactarnos!</p>'     + '<hr style=\\'border:none;border-top:1px solid #eee;margin:16px 0\\'>'     + '<p style=\\'color:#888;font-size:12px\\'>La Imprenta Verde | pedidos@laimprentaverde.cl | Mensaje automatico.</p>'     + '</div>'; } return [{json:{...d, asuntoCliente: asuntoCliente, mensajeCliente: mensajeCliente}}];"
       }
     },
     {
@@ -1460,6 +1460,117 @@
       ],
       "parameters": {
         "jsCode": "const todos = $input.all(); const emailItem = todos.find(function(i) { return i.json.LineaNegocio !== undefined; }); const precios = todos.filter(function(i) { return i.json.Keywords !== undefined; }); const eD = emailItem ? emailItem.json : $('Preparar cotizacion Merchandising').first().json; const texto = ((eD.Asunto_Pedido || '') + ' ' + (eD.Cuerpo_Correo || '')).toLowerCase(); function numCerca(txt, kw) {   const re = new RegExp('(\\\\d{1,5})\\\\s*' + kw + '|' + kw + '\\\\s*(\\\\d{1,5})', 'i');   const m = txt.match(re);   if (m) return parseInt(m[1] || m[2]);   const nums = txt.match(/\\d{2,5}/g);   return nums ? parseInt(nums[0]) : 1; } const matches = []; const usados = {}; for (let pi = 0; pi < precios.length; pi++) {   const pj = precios[pi].json;   const kws = (pj.Keywords || '').toLowerCase().split(',');   for (let ki = 0; ki < kws.length; ki++) {     const kw = kws[ki].trim();     if (!kw || usados[pj.Producto]) continue;     if (texto.indexOf(kw) >= 0) {       usados[pj.Producto] = true;       const cnt = numCerca(texto, kw);       const pu = parseFloat(String(pj.Precio_Unitario_Neto || '0').replace(/\\./g,'').replace(',','.')) || 0;       matches.push({ producto: pj.Producto || kw.toUpperCase(), cantidad: cnt, valorUnit: pu, subtotal: cnt * pu, tiempo: pj.Tiempo_Produccion || '3-5 dias habiles' });       break;     }   } } const encontrado = matches.length > 0; const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']; const now = new Date(); const fechaF = eD.Fecha_Formal || ('Santiago, ' + now.getDate() + ' de ' + meses[now.getMonth()] + ' de ' + now.getFullYear()); const plazo = encontrado ? matches[0].tiempo : '3-5 dias habiles'; let filas = ''; let subG = 0; for (let mi = 0; mi < matches.length; mi++) {   const m = matches[mi]; subG += m.subtotal;   filas += '<tr>'     + '<td style=\\'padding:8px;border:1px solid #ccc\\'>' + m.producto + '</td>'     + '<td style=\\'padding:8px;border:1px solid #ccc;text-align:right\\'>' + m.cantidad + '</td>'     + '<td style=\\'padding:8px;border:1px solid #ccc;text-align:right\\'>$' + m.valorUnit.toLocaleString('es-CL') + '</td>'     + '</tr>'; } const iva = Math.round(subG * 0.19); const total = subG + iva; let htmlCotiz = ''; if (encontrado) {   htmlCotiz =     '<div style=\\'font-family:Arial,sans-serif;max-width:700px;padding:20px\\'>'     + '<table width=\\'100%\\' cellpadding=\\'0\\' cellspacing=\\'0\\' style=\\'margin-bottom:20px\\'><tr>'     + '<td><strong style=\\'font-size:22px;color:#2c5f8a\\'>imprenta</strong><strong style=\\'font-size:22px;color:#e63946\\'>mmg</strong><br><small style=\\'color:#666;letter-spacing:2px\\'>DIGITAL &amp; OFFSET</small></td>'     + '<td align=\\'right\\' style=\\'font-size:13px;color:#333;vertical-align:top\\'>' + fechaF + '</td>'     + '</tr></table>'     + '<h2 style=\\'color:#1a3a5c;text-decoration:underline\\'>COTIZACION IMPRENTA MMG # ' + eD.N_Cotiz + '</h2>'     + '<p><strong>Sres.:</strong><br><strong>' + eD.Cliente + '</strong><br>At: ' + eD.Atencion + '<br><u>PRESENTE</u></p>'     + '<p>Junto con saludarle, tenemos el agrado de hacerle llegar un presupuesto por los siguientes conceptos:</p>'     + '<table cellpadding=\\'0\\' cellspacing=\\'0\\' style=\\'border-collapse:collapse;width:100%;margin:16px 0\\'>'     + '<tr style=\\'background:#e8e8e8\\'>'     + '<td style=\\'padding:8px;border:1px solid #ccc\\'><strong>Elementos</strong></td>'     + '<td style=\\'padding:8px;border:1px solid #ccc;text-align:right\\'><strong>Cantidades</strong></td>'     + '<td style=\\'padding:8px;border:1px solid #ccc;text-align:right\\'><strong>Valor unitario neto</strong></td>'     + '</tr>'     + filas     + '<tr style=\\'background:#f0f0f0\\'>'     + '<td colspan=\\'2\\' style=\\'padding:8px;border:1px solid #ccc\\'><strong>Subtotal neto</strong></td>'     + '<td style=\\'padding:8px;border:1px solid #ccc;text-align:right\\'><strong>$' + subG.toLocaleString('es-CL') + '</strong></td>'     + '</tr>'     + '<tr>'     + '<td colspan=\\'2\\' style=\\'padding:8px;border:1px solid #ccc\\'>IVA (19%)</td>'     + '<td style=\\'padding:8px;border:1px solid #ccc;text-align:right\\'>$' + iva.toLocaleString('es-CL') + '</td>'     + '</tr>'     + '<tr style=\\'background:#d0e4f5\\'>'     + '<td colspan=\\'2\\' style=\\'padding:8px;border:1px solid #ccc\\'><strong>TOTAL</strong></td>'     + '<td style=\\'padding:8px;border:1px solid #ccc;text-align:right\\'><strong>$' + total.toLocaleString('es-CL') + '</strong></td>'     + '</tr></table>'     + '<p style=\\'color:#1a3a5c\\'>'     + '<strong>TIEMPO DE PRODUCCION TOTAL: ' + plazo + '</strong><br>'     + '<strong>IMPRENTA MMG SA / RUT: 76.281.107-3</strong><br>'     + '<strong>Cuenta corriente: Banco de Chile N°174-06098-10 / imprentammg@gmail.com</strong><br>'     + '<strong>Manuel Antonio Tocornal 1912, Santiago / Fono: 225548531 / 225518212 / 225251468</strong>'     + '</p>'     + '<br><table width=\\'100%\\'><tr><td align=\\'center\\' style=\\'color:#555;padding-top:30px;font-size:13px\\'>'     + 'Marta Silva Morales<br>IMPRENTA MMG'     + '</td></tr></table>'     + '<hr style=\\'margin:20px 0;border:none;border-top:1px solid #ccc\\'>'     + '<p style=\\'font-size:11px;color:#777\\'>Dirección M.A. Tocornal 1912 – Santiago- teléfonos: 25548531 – 25518212 – 99 8188987 &nbsp;&nbsp; E-mail: imprentammg@gmail.com</p>'     + '</div>'; } const out = Object.assign({}, eD, { cotizacion_automatica: encontrado, htmlCotizacion: htmlCotiz, Plazo_Produccion: plazo }); if (encontrado) {   out.Estado_Cotiz = 'Generada automaticamente';   out.Subtotal_General = subG; out.IVA_19 = iva; out.Total = total;   if (matches[0]) { out.Producto_1=matches[0].producto; out.Cantidad_1=matches[0].cantidad; out.ValorUnit_1=matches[0].valorUnit; out.Subtotal_1=matches[0].subtotal; }   if (matches[1]) { out.Producto_2=matches[1].producto; out.Cantidad_2=matches[1].cantidad; out.ValorUnit_2=matches[1].valorUnit; out.Subtotal_2=matches[1].subtotal; }   if (matches[2]) { out.Producto_3=matches[2].producto; out.Cantidad_3=matches[2].cantidad; out.ValorUnit_3=matches[2].valorUnit; out.Subtotal_3=matches[2].subtotal; }   if (matches[3]) { out.Producto_4=matches[3].producto; out.Cantidad_4=matches[3].cantidad; out.ValorUnit_4=matches[3].valorUnit; out.Subtotal_4=matches[3].subtotal; }   if (matches[4]) { out.Producto_5=matches[4].producto; out.Cantidad_5=matches[4].cantidad; out.ValorUnit_5=matches[4].valorUnit; out.Subtotal_5=matches[4].subtotal; } } return [{json: out}];"
+      }
+    },
+    {
+      "id": "n-cot-if",
+      "name": "Tiene cotizacion automatica",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2800,
+        40
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-cot-auto",
+              "leftValue": "={{ $json.cotizacion_automatica }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "n-pdf",
+      "name": "Generar PDF cotizacion (PDFShift)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        3080,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_PDFSHIFT_CREDENTIAL_ID",
+          "name": "PDFShift API Key"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pdfshift.io/v3/convert/pdf",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ source: $json.htmlCotizacion, format: 'A4', margin: '15mm', filename: 'Cotizacion_' + $json.N_Cotiz + '.pdf' }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "n6-pdf",
+      "name": "Enviar cotizacion PDF al cliente",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        3360,
+        0
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail - La Imprenta Verde"
+        }
+      },
+      "parameters": {
+        "sendTo": "={{ $('Preparar notificacion cliente').item.json.Email_Cliente }}",
+        "subject": "={{ $('Preparar notificacion cliente').item.json.asuntoCliente }}",
+        "emailType": "html",
+        "message": "={{ $('Preparar notificacion cliente').item.json.mensajeCliente }}",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "property": "data"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "sticky-pdf",
+      "name": "Sticky - PDFShift",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3040,
+        -200
+      ],
+      "parameters": {
+        "content": "## Cotización PDF (PDFShift)\nSolo se ejecuta para Merchandising cuando el producto SI esta en la 'Lista de Precios Merchandising'.\nConvierte el HTML a PDF y lo adjunta al correo.\n\n**Credencial requerida:** Header Auth\nNombre header: `X-API-Key`\nValor: API key de pdfshift.io (free tier 50/mes)",
+        "height": 220,
+        "width": 360,
+        "color": 2
       }
     }
   ],
@@ -1749,12 +1860,12 @@
             "index": 0
           },
           {
-            "node": "Confirmar recepcion al cliente",
+            "node": "Notificar a secretarias nuevo pedido",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Notificar a secretarias nuevo pedido",
+            "node": "Tiene cotizacion automatica",
             "type": "main",
             "index": 0
           }
@@ -1793,6 +1904,35 @@
           }
         ]
       ]
+    },
+    "Tiene cotizacion automatica": {
+      "main": [
+        [
+          {
+            "node": "Generar PDF cotizacion (PDFShift)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Confirmar recepcion al cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generar PDF cotizacion (PDFShift)": {
+      "main": [
+        [
+          {
+            "node": "Enviar cotizacion PDF al cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "pinData": {},
@@ -1809,6 +1949,6 @@
     }
   ],
   "triggerCount": 3,
-  "updatedAt": "2026-06-07T08:00:00.000Z",
+  "updatedAt": "2026-06-08T00:00:00.000Z",
   "versionId": "1"
 }

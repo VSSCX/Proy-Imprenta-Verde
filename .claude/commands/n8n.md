@@ -262,6 +262,55 @@ Eres un experto de primer nivel en n8n versión 1.x y arquitectura de workflows 
 ```
 > Colores: 1=rojo, 2=naranja, 3=verde, 4=azul, 5=morado, 6=gris.
 
+### Merge node
+```json
+{
+  "type": "n8n-nodes-base.merge",
+  "typeVersion": 3,
+  "parameters": { "mode": "append" }
+}
+```
+> En connections, las dos entradas del Merge se direccionan con `index: 0` e `index: 1`.
+
+### HTTP Request — generar PDF con PDFShift
+```json
+{
+  "type": "n8n-nodes-base.httpRequest",
+  "typeVersion": 4,
+  "parameters": {
+    "method": "POST",
+    "url": "https://api.pdfshift.io/v3/convert/pdf",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ source: $json.htmlCotizacion, format: 'A4', margin: '15mm' }) }}",
+    "options": { "response": { "response": { "responseFormat": "file", "outputPropertyName": "data" } } }
+  },
+  "credentials": { "httpHeaderAuth": { "id": "YOUR_PDFSHIFT_CREDENTIAL_ID", "name": "PDFShift API Key" } }
+}
+```
+> ⚠️ Con `responseFormat: "file"` el binario queda en `data` y el `json` se vacia.
+> Para usar campos posteriores (email, asunto) referenciar el nodo previo: `$('Nombre Nodo').item.json.campo`.
+> Credencial = Header Auth con nombre `X-API-Key` y valor = API key de pdfshift.io (free 50/mes).
+
+### Gmail Send — con adjunto binario
+```json
+{
+  "type": "n8n-nodes-base.gmail",
+  "typeVersion": 2,
+  "parameters": {
+    "sendTo": "={{ $('Nodo Previo').item.json.Email_Cliente }}",
+    "subject": "=Asunto",
+    "emailType": "html",
+    "message": "=<p>Adjunto PDF.</p>",
+    "options": { "attachmentsUi": { "attachmentsBinary": [{ "property": "data" }] } }
+  },
+  "credentials": { "gmailOAuth2": { "id": "YOUR_GMAIL_CREDENTIAL_ID", "name": "Gmail - La Imprenta Verde" } }
+}
+```
+> `property` debe coincidir con `outputPropertyName` del HTTP Request que genero el binario.
+
 ---
 
 ## Reglas de connections
