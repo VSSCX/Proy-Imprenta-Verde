@@ -175,5 +175,8 @@ Antes de activar:
 |---------|-------------|
 | `workflow_trazabilidad_imprenta_verde.json` | Workflow completo de n8n (importar este). |
 | `ejemplo_lista_precios_merchandising.csv` | Lista de precios de ejemplo para probar el prototipo. |
+| `demo_cotizacion_ejemplo.html` | Cotización de ejemplo generada por el flujo (abrir en navegador). |
+| `DEMO.md` | Guion de demostración para mostrar el prototipo. |
+| `test_flujo.js` | Prueba automática de la lógica (`node test_flujo.js`). |
 | `Imprenta_MMG-removebg-preview.png` | Logo original (ya embebido en el JSON). |
 | `.claude/commands/n8n.md` | Guía/skill de patrones n8n para mantención. |
