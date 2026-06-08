@@ -174,6 +174,8 @@ Antes de activar:
 | Archivo | Descripción |
 |---------|-------------|
 | `workflow_trazabilidad_imprenta_verde.json` | Workflow completo de n8n (importar este). |
+| `GUIA_IMPLEMENTACION.md` | Guía de implementación y uso + checklist (Markdown). |
+| `GUIA_IMPLEMENTACION.html` | Misma guía, imprimible a PDF (abrir en navegador → Ctrl+P). |
 | `ejemplo_lista_precios_merchandising.csv` | Lista de precios de ejemplo para probar el prototipo. |
 | `demo_cotizacion_ejemplo.html` | Cotización de ejemplo generada por el flujo (abrir en navegador). |
 | `DEMO.md` | Guion de demostración para mostrar el prototipo. |
