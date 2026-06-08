@@ -1748,6 +1748,34 @@
         "width": 340,
         "color": 6
       }
+    },
+    {
+      "id": "n-label-pend",
+      "name": "Etiquetar correo: Pendiente de cotizar",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        840,
+        480
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail - La Imprenta Verde"
+        }
+      },
+      "parameters": {
+        "resource": "message",
+        "operation": "addLabels",
+        "messageId": "={{ $json.Message_ID }}",
+        "labelIds": [
+          "YOUR_LABEL_ID_PENDIENTE_COTIZAR"
+        ]
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -1988,6 +2016,11 @@
         [
           {
             "node": "Clasificar area de produccion",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Etiquetar correo: Pendiente de cotizar",
             "type": "main",
             "index": 0
           }

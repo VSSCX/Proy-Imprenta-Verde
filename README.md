@@ -98,6 +98,7 @@ Al importar, conecta cada nodo a su credencial. Quedan estos textos por reemplaz
 | `YOUR_SHEETS_URL` | URL completa del Sheets | Aparece en los enlaces "Ver en Google Sheets" de los correos |
 | `YOUR_LABEL_ID_PEDIDO_RECIBIDO` | Etiqueta de Gmail | Nodo "Etiquetar correo: Pedido recibido" (ver paso 6) |
 | `YOUR_LABEL_ID_COTIZACION_ENVIADA` | Etiqueta de Gmail | Nodo "Etiquetar correo: Cotizacion enviada" (ver paso 6) |
+| `YOUR_LABEL_ID_PENDIENTE_COTIZAR` | Etiqueta de Gmail | Nodo "Etiquetar correo: Pendiente de cotizar" (ver paso 6) |
 
 > El **logo** ya viene embebido en base64 dentro del workflow — no requiere hosting.
 
@@ -111,6 +112,8 @@ o editable nodo por nodo.
 El flujo etiqueta automáticamente cada correo entrante:
 - **"Pedido recibido"** → apenas lee y procesa el correo del pedido.
 - **"Cotización enviada"** → cuando manda la cotización automática de Merchandising.
+- **"Pendiente de cotizar"** → en pedidos de Papelería (los que cotiza el encargado a mano),
+  para que vea de un vistazo qué correos tiene en cola.
 
 Antes de activar:
 1. En Gmail: **Configuración → Etiquetas → Crear etiqueta** → crea las dos
