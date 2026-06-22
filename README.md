@@ -178,6 +178,7 @@ Antes de activar:
 | `GUIA_IMPLEMENTACION.html` | Misma guía, imprimible a PDF (abrir en navegador → Ctrl+P). |
 | `ejemplo_lista_precios_merchandising.csv` | Lista de precios de ejemplo para probar el prototipo. |
 | `demo_cotizacion_ejemplo.html` | Cotización de ejemplo generada por el flujo (abrir en navegador). |
+| `DIAGRAMA_FLUJO.html` | Diagrama visual del flujo (4 carriles) para presentar el prototipo (abrir en navegador). |
 | `DEMO.md` | Guion de demostración para mostrar el prototipo. |
 | `test_flujo.js` | Prueba automática de la lógica (`node test_flujo.js`). |
 | `Imprenta_MMG-removebg-preview.png` | Logo original (ya embebido en el JSON). |
