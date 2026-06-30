@@ -28,7 +28,11 @@
   .flujo{width:100%;height:100%;background:radial-gradient(1200px 700px at 50% 0%,#16334d,#0e2233);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 40px;}
   .flujo h2{font-size:40px;font-weight:800;margin-bottom:6px;text-align:center;}
   .flujo p.sub{color:#9fb6c9;font-size:19px;margin-bottom:36px;}
-  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px 26px;max-width:1500px;width:100%;}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px 26px;max-width:1500px;width:100%;}
+  .sub2{color:#7fd1a8;font-size:18px;font-weight:600;margin:26px 0 14px;letter-spacing:.5px;text-transform:uppercase;}
+  .grid2{grid-template-columns:repeat(3,1fr);max-width:1200px;}
+  .cell2{min-height:120px;background:linear-gradient(160deg,#1d2f4a,#15334c);}
+  .cell2:hover{background:linear-gradient(160deg,#6f42c1,#3a1f6b);border-color:#a472f0;}
   .cell{position:relative;background:linear-gradient(160deg,#1b3e5c,#15334c);border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:24px 22px;text-decoration:none;color:#fff;transition:.18s;display:flex;flex-direction:column;gap:10px;min-height:150px;cursor:pointer;}
   .cell:hover{transform:translateY(-5px);border-color:#2bd07a;box-shadow:0 18px 40px rgba(0,0,0,.45);background:linear-gradient(160deg,#1f8a5b,#14633f);}
   .cell .n{position:absolute;top:14px;right:16px;font-size:13px;font-weight:800;color:#7fd1a8;}
@@ -65,6 +69,11 @@ const FLOW = [
   {n:'07', ic:'\u{1F504}', t:'Actualiza el estado', d:'Cambia el estado de la OT', go:9},
   {n:'08', ic:'\u{1F465}', t:'Notifica al equipo', d:'Aviso a secretarias y diseno', go:10},
 ];
+const FLOW2 = [
+  {ic:'\u{270F}\u{FE0F}', t:'Modificacion de la OT', d:'Detecta el cambio, lo registra y avisa', go:11},
+  {ic:'\u{1F69A}', t:'Pedidos en externo', d:'Controla y alerta atrasos cada dia', go:14},
+  {ic:'\u{1F4F1}', t:'WhatsApp Business', d:'Mismo flujo, tono humano (piloto)', go:16},
+];
 const SLIDES = [
   {type:'img', src:'assets/01_portada.png'},
   {type:'img', src:'assets/02_explicativa.png'},
@@ -77,6 +86,13 @@ const SLIDES = [
   {type:'img', src:'assets/10_cotizacion.png', cap:'Paso 6 · La cotizacion en PDF', node:true},
   {type:'img', src:'assets/11_sheets_estado.png', cap:'Paso 7 · Actualiza el estado de la OT', node:true},
   {type:'img', src:'assets/12_email_secretarias.png', cap:'Paso 8 · Notifica a secretarias el ingreso', node:true},
+  {type:'img', src:'assets/n13_cambio.png', cap:'Modificacion · Detecta cambios en la OT', node:true},
+  {type:'img', src:'assets/n14_hist.png', cap:'Modificacion · Guarda el historial del cambio', node:true},
+  {type:'img', src:'assets/n15_plazo.png', cap:'Modificacion · Avisa al cliente el nuevo plazo', node:true},
+  {type:'img', src:'assets/n16_externo.png', cap:'Externos · Controla los pedidos en proveedor externo', node:true},
+  {type:'img', src:'assets/n17_alerta.png', cap:'Externos · Alerta diaria de atrasos', node:true},
+  {type:'img', src:'assets/n18_wa_list.png', cap:'WhatsApp piloto · El agente atiende los chats', node:true},
+  {type:'img', src:'assets/n19_wa_convo.png', cap:'WhatsApp piloto · Cotiza conversando, con tono humano', node:true},
   {type:'img', src:'assets/13_costos.png'},
 ];
 let cur=0;
@@ -91,7 +107,8 @@ function render(){
   div.className='slide active';
   if(s.type==='flujo'){
     let cells=FLOW.map(f=>`<a class="cell" onclick="go(${f.go})"><span class="n">${f.n}</span><span class="ic">${f.ic}</span><span class="t">${f.t}</span><span class="d">${f.d}</span></a>`).join('');
-    div.innerHTML=`<div class="flujo"><h2>El flujo completo, paso a paso</h2><p class="sub">Haz clic en cualquier paso para verlo en detalle</p><div class="grid">${cells}</div><div class="flowhint">&#9889; De correo entrante a cotizacion enviada y registrada &#8212; en menos de 1 minuto</div></div>`;
+    let cells2=FLOW2.map(f=>`<a class="cell cell2" onclick="go(${f.go})"><span class="ic">${f.ic}</span><span class="t">${f.t}</span><span class="d">${f.d}</span></a>`).join('');
+    div.innerHTML=`<div class="flujo"><h2>El flujo completo, paso a paso</h2><p class="sub">Haz clic en cualquier paso para verlo en detalle</p><div class="grid">${cells}</div><p class="sub2">Otros flujos del agente</p><div class="grid grid2">${cells2}</div></div>`;
   } else {
     div.innerHTML=`<div class="imgwrap"><img src="${s.src}"></div>`;
     if(s.node){
