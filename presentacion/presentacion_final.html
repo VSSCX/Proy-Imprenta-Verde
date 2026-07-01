@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Imprenta MMG — Presentación Final (Grupo 8)</title>
+<style>
+  :root{--azul:#1b4da3;--bg:#0f2f6b;}
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto,Arial,sans-serif;}
+  html,body{height:100%;background:#0d1f3d;overflow:hidden;}
+  .stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;}
+  .slide{display:none;width:100%;height:100%;align-items:center;justify-content:center;}
+  .slide.active{display:flex;animation:fade .3s ease;}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .imgwrap{max-width:96vw;max-height:92vh;border-radius:8px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.6);background:#fff;}
+  .imgwrap img{display:block;max-width:96vw;max-height:92vh;}
+  .caption{position:fixed;top:16px;left:0;right:0;text-align:center;color:#cfe0ff;font-size:15px;font-weight:600;letter-spacing:.3px;pointer-events:none;text-shadow:0 2px 6px rgba(0,0,0,.6);}
+  .nav{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.10);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.18);border-radius:40px;padding:7px 16px;z-index:50;}
+  .nav button{background:rgba(255,255,255,.14);color:#fff;border:none;border-radius:50%;width:38px;height:38px;font-size:17px;cursor:pointer;transition:.15s;}
+  .nav button:hover{background:#2a6fd6;}
+  .counter{color:#fff;font-size:13px;min-width:118px;text-align:center;font-variant-numeric:tabular-nums;}
+  .dots{position:fixed;top:14px;left:16px;right:16px;z-index:40;display:flex;gap:4px;justify-content:center;flex-wrap:wrap;}
+  .dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.28);cursor:pointer;}
+  .dots i.on{background:#2a6fd6;width:20px;border-radius:5px;}
+  .sec{position:fixed;bottom:18px;right:22px;z-index:50;color:#9fb6d6;font-size:12px;}
+</style>
+</head>
+<body>
+<div class="dots" id="dots"></div>
+<div class="caption" id="caption"></div>
+<div class="stage" id="stage"></div>
+<div class="nav">
+  <button onclick="prev()">&#8249;</button>
+  <span class="counter" id="counter"></span>
+  <button onclick="next()">&#8250;</button>
+</div>
+<div class="sec" id="sec"></div>
+<script>
+const P='assets/';
+const SLIDES=[
+ {s:'c01_portada.png', c:'Portada', g:'Presentación'},
+ {s:'c02_agenda.png', c:'Agenda', g:'Presentación'},
+ {s:'c03_resumen.png', c:'01 · Resumen organizacional', g:'Contexto'},
+ {s:'c04_problematica.png', c:'02 · Problemática central', g:'Contexto'},
+ {s:'c05_requerimientos.png', c:'03 · Requerimientos', g:'Contexto'},
+ {s:'c06_solucion.png', c:'04 · Solución propuesta', g:'Contexto'},
+ {s:'c07_stakeholders.png', c:'05 · Casos de uso y stakeholders', g:'Contexto'},
+ {s:'c08_divider.png', c:'06 · Diseño del prototipo', g:'Prototipo'},
+ {s:'01_portada.png', c:'Prototipo · El agente cotiza solo', g:'Prototipo'},
+ {s:'02_explicativa.png', c:'Prototipo · Qué resuelve', g:'Prototipo'},
+ {s:'03_flujo.png', c:'Prototipo · El flujo completo', g:'Prototipo'},
+ {s:'04_agente.png', c:'Prototipo · El agente (Gmail + WhatsApp)', g:'Prototipo'},
+ {s:'s2_inbox.png', c:'Prototipo · Lee la bandeja', g:'Prototipo'},
+ {s:'s3_email_pedido.png', c:'Prototipo · Entiende el pedido', g:'Prototipo'},
+ {s:'s4_sheets_trazabilidad.png', c:'Prototipo · Registra la OT', g:'Prototipo'},
+ {s:'s5_email_respuesta.png', c:'Prototipo · Responde con la cotización', g:'Prototipo'},
+ {s:'s6_cotizacion.png', c:'Prototipo · La cotización en PDF', g:'Prototipo'},
+ {s:'s7_sheets_estado.png', c:'Prototipo · Actualiza el estado', g:'Prototipo'},
+ {s:'s8_email_secretarias.png', c:'Prototipo · Notifica a secretarías', g:'Prototipo'},
+ {s:'n13_cambio.png', c:'Prototipo · Detecta cambios en la OT', g:'Prototipo'},
+ {s:'n14_hist.png', c:'Prototipo · Historial de cambios', g:'Prototipo'},
+ {s:'n15_plazo.png', c:'Prototipo · Avisa el nuevo plazo', g:'Prototipo'},
+ {s:'n16_externo.png', c:'Prototipo · Control de externos', g:'Prototipo'},
+ {s:'n17_alerta.png', c:'Prototipo · Alerta de atrasos', g:'Prototipo'},
+ {s:'n18_wa_list.png', c:'Prototipo · WhatsApp Business', g:'Prototipo'},
+ {s:'n19_wa_convo.png', c:'Prototipo · Cotiza por WhatsApp', g:'Prototipo'},
+ {s:'13_costos.png', c:'Prototipo · Costos y puesta en marcha', g:'Prototipo'},
+ {s:'c09_beneficios.png', c:'07 · Beneficios esperados', g:'Cierre'},
+ {s:'c10_conclusion.png', c:'Conclusión', g:'Cierre'},
+ {s:'c11_gracias.png', c:'¡Muchas gracias!', g:'Cierre'},
+];
+let cur=0;
+const stage=document.getElementById('stage'), dots=document.getElementById('dots');
+SLIDES.forEach((_,i)=>{const d=document.createElement('i');d.onclick=()=>go(i);dots.appendChild(d);});
+function render(){
+  stage.innerHTML=`<div class="slide active"><div class="imgwrap"><img src="${P}${SLIDES[cur].s}"></div></div>`;
+  document.getElementById('caption').textContent=SLIDES[cur].c;
+  document.getElementById('counter').textContent=(cur+1)+' / '+SLIDES.length;
+  document.getElementById('sec').textContent=SLIDES[cur].g;
+  [...dots.children].forEach((d,i)=>d.className=i===cur?'on':'');
+}
+function go(i){cur=Math.max(0,Math.min(SLIDES.length-1,i));render();}
+function next(){go(cur+1)} function prev(){go(cur-1)}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' ')next();if(e.key==='ArrowLeft')prev();});
+render();
+</script>
+</body>
+</html>
