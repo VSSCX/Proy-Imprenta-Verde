@@ -73,9 +73,11 @@
           ]
         },
         "filters": {
-          "q": "subject:(cotizacion OR pedido OR orden OR solicitud) is:unread"
+          "q": "is:unread -category:promotions -category:social -in:chats"
         },
-        "options": {}
+        "options": {
+          "downloadAttachments": true
+        }
       }
     },
     {
@@ -88,7 +90,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "const item = $input.first(); const d = item.json; const now = new Date(); const pad = (n) => String(n).padStart(2, '0'); const dateStr = now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()); const sec = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds(); const seq = String(sec % 1000).padStart(3, '0'); const idOT = 'OT-' + dateStr + '-' + seq; const from = d.from || ''; const ai = from.indexOf('<'); const emailCliente = ai >= 0 ? from.slice(ai+1, from.indexOf('>', ai)) : from; const nombre = (ai >= 0 ? from.slice(0, ai) : emailCliente.split('@')[0]).trim() || 'Cliente'; const asuntoRaw = d.subject || 'Sin asunto'; const asunto = asuntoRaw.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,''); const addBiz = (dt, n) => { const r = new Date(dt); let a=0; while(a<n){r.setDate(r.getDate()+1);const w=r.getDay();if(w!==0&&w!==6)a++;} return r; }; const fe = addBiz(now,2).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'}); let area = 'Sin Asignar'; let disenador = 'vsotoc@fen.uchile.cl'; let lineaNegocio = 'Papeleria'; if (asunto.match('polera|camiseta|ropa|polo|buzo|chaleco|bordado')) { area='Ropa'; disenador='vsotoc@fen.uchile.cl'; } else if (asunto.match('cuaderno|agenda|anillado|espiral|bloc|libreta')) { area='Libreria'; disenador='vsotoc@fen.uchile.cl'; } else if (asunto.match('plastificado|laminado|carpeta|oficio|polimate')) { area='Plastificados'; disenador='vsotoc@fen.uchile.cl'; } else if (asunto.match('taza|lapiz|lapicera|pendrive|gift|regalo|mochila|souvenir|gorro|termos|termo|lanyard|credencial|bolsa')) { area='Merchandising'; disenador='vsotoc@fen.uchile.cl'; lineaNegocio='Merchandising'; } return [{json:{ID_OT:idOT,Message_ID:(d.id||d.messageId||''),Thread_ID:(d.threadId||''),Fecha_Ingreso:now.toISOString(),Cliente:nombre,Email_Cliente:emailCliente,Asunto_Pedido:asuntoRaw,Cuerpo_Correo:d.text||d.snippet||'',Area:area,Disenador_Asignado:disenador,Estado:'Recibido',Fecha_Entrega_Estimada:fe,LineaNegocio:lineaNegocio,Canal:'Email',Va_A_Externo:'No',Proveedor_Externo:'',Fecha_Limite_Retorno:'',Fecha_Retorno_Real:'',Modalidad_Despacho:'',Notas:'',Fecha_Cierre:'',_Sistema_Flag:''}}];"
+        "jsCode": "const item = $input.first();\nconst d = item.json;\nconst now = new Date();\nconst pad = (n) => String(n).padStart(2, '0');\nconst dateStr = now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate());\nconst sec = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds();\nconst seq = String(sec % 1000).padStart(3, '0');\nconst idOT = 'OT-' + dateStr + '-' + seq;\n\n// --- Remitente ---\nconst from = d.from || '';\nconst ai = from.indexOf('<');\nconst emailCliente = ai >= 0 ? from.slice(ai+1, from.indexOf('>', ai)) : from;\nconst nombre = (ai >= 0 ? from.slice(0, ai) : (emailCliente.split('@')[0] || 'Cliente')).trim() || 'Cliente';\n\n// --- Textos base ---\nconst asuntoRaw = d.subject || 'Sin asunto';\nconst cuerpo = (d.text || d.textPlain || d.snippet || '').toString();\n\n// --- (2) Nombres de archivos adjuntos, desde el binario del trigger ---\nlet adjuntos = [];\ntry {\n  const bin = item.binary || {};\n  for (const k of Object.keys(bin)) {\n    const fn = bin[k] && bin[k].fileName ? bin[k].fileName : k;\n    if (fn) adjuntos.push(fn);\n  }\n} catch (e) {}\nif (Array.isArray(d.attachments)) {\n  for (const a of d.attachments) { if (a && (a.filename || a.name)) adjuntos.push(a.filename || a.name); }\n}\nadjuntos = Array.from(new Set(adjuntos));\n\n// --- (1) TextoAnalisis: asunto + cuerpo + nombres de adjuntos ---\nconst textoAnalisis = [asuntoRaw, cuerpo, adjuntos.length ? ('Archivos adjuntos: ' + adjuntos.join(', ')) : '']\n  .filter(Boolean).join('\\n');\nconst norm = (s) => (s || '').toString().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\nconst T = norm(textoAnalisis);\n\n// --- (4) Clasificacion multi-area sobre TextoAnalisis ---\nconst AREAS = [\n  { area: 'Ropa',          disenador: 'vsotoc@fen.uchile.cl', linea: 'Ropa',          rx: /(polera|camiseta|ropa|polo|buzo|chaleco|bordad|poleron|jockey|delantal|pechera|gorra)/ },\n  { area: 'Libreria',      disenador: 'vsotoc@fen.uchile.cl', linea: 'Papeleria',     rx: /(cuaderno|agenda|anillad|espiral|bloc|libreta|talonario|factura|boleta|resma|impresion|folleto|volante|diptico|triptico|afiche|poster)/ },\n  { area: 'Plastificados', disenador: 'vsotoc@fen.uchile.cl', linea: 'Papeleria',     rx: /(plastificad|laminad|carpeta|oficio|polimate|credencial|gafete)/ },\n  { area: 'Merchandising', disenador: 'vsotoc@fen.uchile.cl', linea: 'Merchandising', rx: /(taza|tazon|lapiz|lapicera|pendrive|gift|regalo|mochila|souvenir|termo|lanyard|bolsa|llavero|cojin|mousepad|banderin|pendon|lienzo|roller|pulsera)/ }\n];\nlet detectadas = [];\nfor (const a of AREAS) { if (a.rx.test(T)) detectadas.push(a); }\nlet area = 'Sin Asignar';\nlet disenador = 'vsotoc@fen.uchile.cl';\nlet lineaNegocio = 'Papeleria';\nif (detectadas.length) { area = detectadas[0].area; disenador = detectadas[0].disenador; lineaNegocio = detectadas[0].linea; }\nconst areasDetectadas = detectadas.map(a => a.area);\nconst lineasDetectadas = Array.from(new Set(detectadas.map(a => a.linea)));\nconst multiArea = areasDetectadas.length > 1;\n\n// --- (5) Cantidades + producto y (6) medidas ---\nconst textoItems = asuntoRaw + '\\n' + cuerpo;\nconst items = [];\nconst rxCant = /(\\d{1,6})\\s+([a-zA-ZñÑáéíóúÁÉÍÓÚ][\\wñÑáéíóúÁÉÍÓÚ\\-]{2,30}(?:\\s+(?:negr|blanc|roj|azul|verd|bordad|estampad|sublimad)[a-zñ]*)?)/g;\nlet m;\nwhile ((m = rxCant.exec(textoItems)) !== null) {\n  const cant = parseInt(m[1], 10);\n  const prod = m[2].trim();\n  const prevChar = m.index > 0 ? textoItems[m.index - 1] : '';\n  const esParteDeMedida = prevChar === 'x' || prevChar === '×';\n  if (!esParteDeMedida && cant > 0 && cant < 1000000 && prod.length >= 3 && !/^\\d/.test(prod)) {\n    items.push({ cantidad: cant, producto: prod });\n  }\n}\nconst medidas = [];\nconst rxMed = /(\\d{1,4})\\s*[x×]\\s*(\\d{1,4})\\s*(cm|mm|mts|mt|metros|m)?/gi;\nwhile ((m = rxMed.exec(textoItems)) !== null) {\n  medidas.push({ ancho: parseInt(m[1],10), alto: parseInt(m[2],10), unidad: (m[3]||'').toLowerCase() });\n}\nconst itemsStr = items.map(it => it.cantidad + ' ' + it.producto).join('; ');\nconst medidasStr = medidas.map(md => md.ancho + 'x' + md.alto + (md.unidad ? (' ' + md.unidad) : '')).join('; ');\n\n// --- (7) Urgencia / prioridad ---\nconst rxUrg = /(urgente|urge|para hoy|es para hoy|para manana|lo antes posible|cuanto antes|inmediat|apurad|no puede esperar|para ya|prioridad alta)/;\nconst esUrgente = rxUrg.test(T);\nconst prioridad = esUrgente ? 'Alta' : 'Normal';\n\n// --- (8) Fecha solicitada por el cliente ---\nconst meses = {enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,julio:7,agosto:8,septiembre:9,setiembre:9,octubre:10,noviembre:11,diciembre:12};\nlet fechaSolicitada = '';\nlet fm = T.match(/(\\d{1,2})\\s+de\\s+([a-z]+)(?:\\s+(?:de\\s+|del\\s+)?(\\d{4}))?/);\nif (fm && meses[fm[2]]) {\n  const dd = parseInt(fm[1],10); const mm = meses[fm[2]]; const yy = fm[3] ? parseInt(fm[3],10) : now.getFullYear();\n  if (dd>=1 && dd<=31) fechaSolicitada = pad(dd)+'/'+pad(mm)+'/'+yy;\n}\nif (!fechaSolicitada) {\n  let fm2 = T.match(/\\b(\\d{1,2})[\\/\\-](\\d{1,2})(?:[\\/\\-](\\d{2,4}))?\\b/);\n  if (fm2) {\n    const dd=parseInt(fm2[1],10), mm=parseInt(fm2[2],10); let yy=fm2[3]?parseInt(fm2[3],10):now.getFullYear();\n    if (yy<100) yy+=2000;\n    if (dd>=1&&dd<=31&&mm>=1&&mm<=12) fechaSolicitada = pad(dd)+'/'+pad(mm)+'/'+yy;\n  }\n}\nconst dias = {domingo:0,lunes:1,martes:2,miercoles:3,jueves:4,viernes:5,sabado:6};\nif (!fechaSolicitada) {\n  for (const dn of Object.keys(dias)) {\n    if (new RegExp('\\\\b'+dn+'\\\\b').test(T)) {\n      const target = dias[dn]; const r = new Date(now); let guard=0;\n      do { r.setDate(r.getDate()+1); guard++; } while (r.getDay()!==target && guard<14);\n      fechaSolicitada = pad(r.getDate())+'/'+pad(r.getMonth()+1)+'/'+r.getFullYear();\n      break;\n    }\n  }\n}\n\n// --- Fecha entrega estimada (respeta la solicitada si existe; urgente = 1 dia habil) ---\nconst addBiz = (dt, n) => { const r=new Date(dt); let a=0; while(a<n){r.setDate(r.getDate()+1);const w=r.getDay();if(w!==0&&w!==6)a++;} return r; };\nconst feDefault = addBiz(now, esUrgente ? 1 : 2).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'});\nconst fechaEntrega = fechaSolicitada || feDefault;\n\n// --- Notas enriquecidas ---\nconst notasArr = [];\nif (itemsStr) notasArr.push('Items: ' + itemsStr);\nif (medidasStr) notasArr.push('Medidas: ' + medidasStr);\nif (multiArea) notasArr.push('Multi-area: ' + areasDetectadas.join(' + '));\nif (esUrgente) notasArr.push('PRIORIDAD ALTA (urgencia detectada)');\nif (fechaSolicitada) notasArr.push('Fecha solicitada: ' + fechaSolicitada);\nif (adjuntos.length) notasArr.push('Adjuntos: ' + adjuntos.join(', '));\nconst notas = notasArr.join(' | ');\n\nreturn [{ json: {\n  ID_OT: idOT,\n  Message_ID: (d.id || d.messageId || ''),\n  Thread_ID: (d.threadId || ''),\n  Fecha_Ingreso: now.toISOString(),\n  Cliente: nombre,\n  Email_Cliente: emailCliente,\n  Asunto_Pedido: asuntoRaw,\n  Cuerpo_Correo: cuerpo,\n  TextoAnalisis: textoAnalisis,\n  Area: area,\n  Areas_Detectadas: areasDetectadas.join(', '),\n  Multi_Area: multiArea ? 'Si' : 'No',\n  Disenador_Asignado: disenador,\n  Estado: 'Recibido',\n  Prioridad: prioridad,\n  Motivo_Prioridad: esUrgente ? 'Palabra de urgencia en el correo' : '',\n  Items_Detectados: itemsStr,\n  Medidas_Detectadas: medidasStr,\n  Fecha_Solicitada: fechaSolicitada,\n  Fecha_Entrega_Estimada: fechaEntrega,\n  LineaNegocio: lineaNegocio,\n  Lineas_Detectadas: lineasDetectadas.join(', '),\n  Canal: 'Email',\n  Adjuntos: adjuntos.join(', '),\n  Va_A_Externo: 'No',\n  Proveedor_Externo: '',\n  Fecha_Limite_Retorno: '',\n  Fecha_Retorno_Real: '',\n  Modalidad_Despacho: '',\n  Notas: notas,\n  Fecha_Cierre: '',\n  _Sistema_Flag: ''\n}}];\n"
       }
     },
     {
@@ -112,8 +114,8 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ $json.Asunto_Pedido }}",
-                    "rightValue": "polera|camiseta|ropa|polo|buzo|chaleco|bordado",
+                    "leftValue": "={{ $json.TextoAnalisis }}",
+                    "rightValue": "polera|camiseta|ropa|polo|buzo|chaleco|bordad|poleron|jockey|delantal|pechera|gorra",
                     "operator": {
                       "type": "string",
                       "operation": "regex"
@@ -133,8 +135,8 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ $json.Asunto_Pedido }}",
-                    "rightValue": "cuaderno|agenda|anillado|espiral|bloc|libreta",
+                    "leftValue": "={{ $json.TextoAnalisis }}",
+                    "rightValue": "cuaderno|agenda|anillad|espiral|bloc|libreta|talonario|factura|boleta|resma|impresion|folleto|volante|diptico|triptico|afiche|poster",
                     "operator": {
                       "type": "string",
                       "operation": "regex"
@@ -154,8 +156,8 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ $json.Asunto_Pedido }}",
-                    "rightValue": "plastificado|laminado|carpeta|oficio|polimate",
+                    "leftValue": "={{ $json.TextoAnalisis }}",
+                    "rightValue": "plastificad|laminad|carpeta|oficio|polimate|credencial|gafete",
                     "operator": {
                       "type": "string",
                       "operation": "regex"
@@ -175,8 +177,8 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ $json.Asunto_Pedido }}",
-                    "rightValue": "taza|lapiz|lapicera|pendrive|gift|regalo|mochila|souvenir|gorro|termos|termo|lanyard|credencial|bolsa",
+                    "leftValue": "={{ $json.TextoAnalisis }}",
+                    "rightValue": "taza|tazon|lapiz|lapicera|pendrive|gift|regalo|mochila|souvenir|termo|lanyard|bolsa|llavero|cojin|mousepad|banderin|pendon|lienzo|roller|pulsera",
                     "operator": {
                       "type": "string",
                       "operation": "regex"
@@ -237,9 +239,15 @@
             "Fecha_Limite_Retorno": "",
             "Fecha_Retorno_Real": "",
             "Modalidad_Despacho": "",
-            "Notas": "",
+            "Notas": "={{ $json.Notas }}",
             "Fecha_Cierre": "",
-            "_Sistema_Flag": ""
+            "_Sistema_Flag": "",
+            "Prioridad": "={{ $json.Prioridad }}",
+            "Items_Detectados": "={{ $json.Items_Detectados }}",
+            "Medidas_Detectadas": "={{ $json.Medidas_Detectadas }}",
+            "Fecha_Solicitada": "={{ $json.Fecha_Solicitada }}",
+            "Es_Cliente_Nuevo": "={{ $json.Es_Cliente_Nuevo }}",
+            "Areas_Detectadas": "={{ $json.Areas_Detectadas }}"
           },
           "schema": [
             {
@@ -394,6 +402,60 @@
               "canBeUsedToMatch": false,
               "display": true,
               "type": "string"
+            },
+            {
+              "id": "Prioridad",
+              "displayName": "Prioridad",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Items_Detectados",
+              "displayName": "Items_Detectados",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Medidas_Detectadas",
+              "displayName": "Medidas_Detectadas",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Fecha_Solicitada",
+              "displayName": "Fecha_Solicitada",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Es_Cliente_Nuevo",
+              "displayName": "Es_Cliente_Nuevo",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Areas_Detectadas",
+              "displayName": "Areas_Detectadas",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
             }
           ]
         },
@@ -476,7 +538,7 @@
         "sendTo": "vsotoc@fen.uchile.cl",
         "subject": "=[{{ $json.ID_OT }}] Pedido ingresado — {{ $json.Cliente }}",
         "emailType": "html",
-        "message": "=<div style='font-family:Arial,sans-serif;max-width:600px'><h3>Nuevo pedido registrado en el sistema</h3><table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;width:100%'><tr style='background:#f5f5f5'><td><b>ID OT</b></td><td><b>{{ $json.ID_OT }}</b></td></tr><tr><td>Cliente</td><td>{{ $json.Cliente }}</td></tr><tr><td>Email cliente</td><td>{{ $json.Email_Cliente }}</td></tr><tr><td>Pedido</td><td>{{ $json.Asunto_Pedido }}</td></tr><tr><td>Area asignada</td><td>{{ $json.Area }}</td></tr><tr><td>Disenador</td><td>{{ $json.Disenador_Asignado }}</td></tr><tr><td>Entrega estimada</td><td>{{ $json.Fecha_Entrega_Estimada }}</td></tr><tr><td>Estado</td><td>{{ $json.Estado }}</td></tr></table><p><a href='YOUR_SHEETS_URL' style='color:#2d6a4f'>Ver en Google Sheets</a></p><hr style='border:none;border-top:1px solid #eee;margin:16px 0'><p style='color:#888;font-size:12px'>La Imprenta Verde · Sistema de ordenes</p></div>",
+        "message": "={{ $json.Es_Cliente_Nuevo === 'Si' ? \"<div style='background:#fff3cd;border:1px solid #ffc107;padding:10px;border-radius:6px;margin:0 0 12px;font-family:Arial'>&#9888;&#65039; <b>Cliente NUEVO</b> &#8212; primera vez que escribe. Verificar datos y dar la bienvenida.</div>\" : '' }}<div style='font-family:Arial,sans-serif;max-width:600px'><h3>Nuevo pedido registrado en el sistema</h3><table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;width:100%'><tr style='background:#f5f5f5'><td><b>ID OT</b></td><td><b>{{ $json.ID_OT }}</b></td></tr><tr><td>Cliente</td><td>{{ $json.Cliente }}</td></tr><tr><td>Email cliente</td><td>{{ $json.Email_Cliente }}</td></tr><tr><td>Pedido</td><td>{{ $json.Asunto_Pedido }}</td></tr><tr><td>Area asignada</td><td>{{ $json.Area }}</td></tr><tr><td>Disenador</td><td>{{ $json.Disenador_Asignado }}</td></tr><tr><td>Entrega estimada</td><td>{{ $json.Fecha_Entrega_Estimada }}</td></tr><tr><td>Estado</td><td>{{ $json.Estado }}</td></tr></table><p><a href='YOUR_SHEETS_URL' style='color:#2d6a4f'>Ver en Google Sheets</a></p><hr style='border:none;border-top:1px solid #eee;margin:16px 0'><p style='color:#888;font-size:12px'>La Imprenta Verde · Sistema de ordenes</p></div>",
         "options": {}
       },
       "retryOnFail": true,
@@ -1776,6 +1838,465 @@
       "maxTries": 3,
       "waitBetweenTries": 2000,
       "onError": "continueRegularOutput"
+    },
+    {
+      "id": "node-leer-ots-existentes",
+      "name": "Leer OTs existentes",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        420,
+        180
+      ],
+      "alwaysOutputData": true,
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Ordenes de Taller",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets - La Imprenta Verde"
+        }
+      }
+    },
+    {
+      "id": "node-detectar-duplicado",
+      "name": "Detectar duplicado y cliente nuevo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        180
+      ],
+      "parameters": {
+        "jsCode": "// (9) Cliente nuevo + (10) Anti-duplicado. Corre una vez para todos los items.\nconst p = $('Parsear correo y generar ID OT').first().json;\nlet rows = [];\ntry {\n  rows = $('Leer OTs existentes').all().map(i => i.json).filter(r => r && (r.ID_OT || r.Email_Cliente));\n} catch (e) { rows = []; }\nconst norm = (s) => (s || '').toString().toLowerCase().trim();\nconst email = norm(p.Email_Cliente);\nconst asunto = norm(p.Asunto_Pedido);\nconst hoy = (p.Fecha_Ingreso || '').slice(0, 10);\n\n// Cliente nuevo: su email nunca aparecio en una OT anterior\nconst clienteConocido = email ? rows.some(r => norm(r.Email_Cliente) === email) : false;\nconst esClienteNuevo = !clienteConocido;\n\n// Duplicado: mismo remitente + mismo asunto + mismo dia\nconst dup = rows.find(r => norm(r.Email_Cliente) === email && norm(r.Asunto_Pedido) === asunto && (r.Fecha_Ingreso || '').slice(0, 10) === hoy && email);\nconst esDuplicado = !!dup;\n\nreturn [{ json: Object.assign({}, p, {\n  Es_Cliente_Nuevo: esClienteNuevo ? 'Si' : 'No',\n  Es_Duplicado: esDuplicado ? 'Si' : 'No',\n  OT_Duplicada_De: dup ? (dup.ID_OT || '') : ''\n}) }];\n"
+      }
+    },
+    {
+      "id": "node-if-duplicada",
+      "name": "Es OT duplicada",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        780,
+        180
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-dup",
+              "leftValue": "={{ $json.Es_Duplicado }}",
+              "rightValue": "Si",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "node-ev-ot-creada",
+      "name": "Log evento: OT creada",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        2240,
+        200
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Log de Eventos",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Fecha_Hora": "={{ $now.toISO() }}",
+            "ID_OT": "={{ $json.ID_OT }}",
+            "Evento": "OT creada",
+            "Detalle": "={{ 'Area: ' + $json.Area + ' | Prioridad: ' + $json.Prioridad + ($json.Es_Cliente_Nuevo === 'Si' ? ' | Cliente NUEVO' : '') }}"
+          },
+          "schema": [
+            {
+              "id": "Fecha_Hora",
+              "displayName": "Fecha_Hora",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "ID_OT",
+              "displayName": "ID_OT",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Evento",
+              "displayName": "Evento",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Detalle",
+              "displayName": "Detalle",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets - La Imprenta Verde"
+        }
+      }
+    },
+    {
+      "id": "node-ev-duplicada",
+      "name": "Log evento: duplicada ignorada",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        980,
+        180
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Log de Eventos",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Fecha_Hora": "={{ $now.toISO() }}",
+            "ID_OT": "={{ $json.ID_OT }}",
+            "Evento": "OT duplicada ignorada",
+            "Detalle": "={{ 'Duplicada de ' + $json.OT_Duplicada_De }}"
+          },
+          "schema": [
+            {
+              "id": "Fecha_Hora",
+              "displayName": "Fecha_Hora",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "ID_OT",
+              "displayName": "ID_OT",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Evento",
+              "displayName": "Evento",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Detalle",
+              "displayName": "Detalle",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets - La Imprenta Verde"
+        }
+      }
+    },
+    {
+      "id": "node-ev-cotiz",
+      "name": "Log evento: cotizacion enviada",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        3640,
+        -180
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Log de Eventos",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Fecha_Hora": "={{ $now.toISO() }}",
+            "ID_OT": "={{ $json.ID_OT }}",
+            "Evento": "Cotizacion enviada",
+            "Detalle": "={{ 'Enviada a ' + $json.Email_Cliente }}"
+          },
+          "schema": [
+            {
+              "id": "Fecha_Hora",
+              "displayName": "Fecha_Hora",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "ID_OT",
+              "displayName": "ID_OT",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Evento",
+              "displayName": "Evento",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Detalle",
+              "displayName": "Detalle",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets - La Imprenta Verde"
+        }
+      }
+    },
+    {
+      "id": "node-error-trigger",
+      "name": "Captura de errores del flujo",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        1500
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "node-error-format",
+      "name": "Formatear error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        280,
+        1500
+      ],
+      "parameters": {
+        "jsCode": "// (15) Formatea el error capturado por el Error Trigger para el Log de Errores.\nconst e = ($input.first() && $input.first().json) ? $input.first().json : {};\nconst exec = e.execution || {};\nconst err = exec.error || e.error || {};\nconst pad = (n) => String(n).padStart(2, '0');\nconst now = new Date();\nconst fecha = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());\nconst nodo = exec.lastNodeExecuted || (err.node && err.node.name) || '';\nconst tipo = err.name || err.errorName || 'Error';\nconst mensaje = err.message || err.description || (typeof err === 'string' ? err : JSON.stringify(err)).slice(0, 500);\nreturn [{ json: {\n  Fecha_Hora: fecha,\n  Nodo: nodo,\n  ID_OT: '',\n  Tipo_Error: tipo,\n  Mensaje: (mensaje || '').toString().slice(0, 500),\n  Accion: 'Registrado en Log de Errores'\n}}];\n"
+      }
+    },
+    {
+      "id": "node-error-log",
+      "name": "Registrar error en Log",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        560,
+        1500
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Log de Errores",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Fecha_Hora": "={{ $json.Fecha_Hora }}",
+            "Nodo": "={{ $json.Nodo }}",
+            "ID_OT": "={{ $json.ID_OT }}",
+            "Tipo_Error": "={{ $json.Tipo_Error }}",
+            "Mensaje": "={{ $json.Mensaje }}",
+            "Accion": "={{ $json.Accion }}"
+          },
+          "schema": [
+            {
+              "id": "Fecha_Hora",
+              "displayName": "Fecha_Hora",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Nodo",
+              "displayName": "Nodo",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "ID_OT",
+              "displayName": "ID_OT",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Tipo_Error",
+              "displayName": "Tipo_Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Mensaje",
+              "displayName": "Mensaje",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Accion",
+              "displayName": "Accion",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets - La Imprenta Verde"
+        }
+      }
+    },
+    {
+      "id": "node-sticky-dedup",
+      "name": "Sticky - Anti-duplicado",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        400,
+        60
+      ],
+      "parameters": {
+        "content": "## Cliente nuevo + Anti-duplicado\nLee las OT existentes, marca **Es_Cliente_Nuevo** y bloquea correos repetidos (mismo remitente + asunto + dia).",
+        "height": 120,
+        "width": 520,
+        "color": 5
+      }
+    },
+    {
+      "id": "node-sticky-err",
+      "name": "Sticky - Carril Errores",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -260,
+        1420
+      ],
+      "parameters": {
+        "content": "## Carril 5 - Manejo de errores\nRequiere: Settings -> Error Workflow = este mismo workflow.\nRegistra cada fallo en la hoja **Log de Errores**.",
+        "height": 200,
+        "width": 240,
+        "color": 1
+      }
     }
   ],
   "connections": {
@@ -1794,12 +2315,7 @@
       "main": [
         [
           {
-            "node": "Clasificar linea de negocio",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Etiquetar correo: Pedido recibido",
+            "node": "Leer OTs existentes",
             "type": "main",
             "index": 0
           }
@@ -1850,6 +2366,11 @@
         [
           {
             "node": "Preparar notificacion cliente",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log evento: OT creada",
             "type": "main",
             "index": 0
           }
@@ -2178,6 +2699,11 @@
             "node": "Etiquetar correo: Cotizacion enviada",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Log evento: cotizacion enviada",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -2187,6 +2713,73 @@
         [
           {
             "node": "Etiquetar correo: Cotizacion enviada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer OTs existentes": {
+      "main": [
+        [
+          {
+            "node": "Detectar duplicado y cliente nuevo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detectar duplicado y cliente nuevo": {
+      "main": [
+        [
+          {
+            "node": "Es OT duplicada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Es OT duplicada": {
+      "main": [
+        [
+          {
+            "node": "Log evento: duplicada ignorada",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Clasificar linea de negocio",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Etiquetar correo: Pedido recibido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Captura de errores del flujo": {
+      "main": [
+        [
+          {
+            "node": "Formatear error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatear error": {
+      "main": [
+        [
+          {
+            "node": "Registrar error en Log",
             "type": "main",
             "index": 0
           }
