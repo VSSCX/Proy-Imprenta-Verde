@@ -92,6 +92,23 @@ complejidad fuera del enfoque no-code de bajo costo del proyecto.
 
 ---
 
+## Cotización manual → aviso al analista (no al cliente)
+
+Antes, los pedidos **sin cotización automática** (todo lo que no sea
+Merchandising con precio en lista) enviaban un **acuse de recibo al cliente**.
+Ahora ese correo **no va al cliente**: en su lugar se avisa a los analistas que
+revisan pedidos (**secretarías + gerente de producción**), con un resumen
+accionable (ID OT, cliente, ítems y cantidades detectadas, medidas, prioridad,
+fecha solicitada, notas). El cliente no recibe correos automáticos en ese caso;
+el analista cotiza y responde manualmente.
+
+- Nodo: **Avisar cotizacion manual a analistas** (rama FALSE de *Tiene
+  cotización automática*).
+- Destinatario en esta build de prueba: `vsotoc@fen.uchile.cl`. En producción
+  cambiar a `secretarias@laimprentaverde.cl, gerente@laimprentaverde.cl`.
+- Merchandising con precio en lista **sigue** enviando el PDF automático al
+  cliente (eso es una cotización completa, no un acuse).
+
 ## Validación
 
 - JSON válido (`python3 -m json.tool`).
