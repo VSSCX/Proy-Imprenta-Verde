@@ -109,6 +109,22 @@ el analista cotiza y responde manualmente.
 - Merchandising con precio en lista **sigue** enviando el PDF automático al
   cliente (eso es una cotización completa, no un acuse).
 
+## Estado de trazabilidad al enviar la cotización
+
+Al enviar la **cotización automática** (PDF de PDFShift o el fallback HTML), un
+nuevo nodo **Actualizar estado: Cotizacion enviada** cambia el `Estado` de la OT
+en la hoja *Ordenes de Taller* de `Recibido` a **`Cotizacion enviada`** (busca
+la fila por `ID_OT`).
+
+- Para no disparar el carril 2 (detección de cambios) con este cambio de
+  sistema, la condición anti-loop *Cambio humano o del sistema* ahora también
+  ignora `Estado == "Cotizacion enviada"`. Un cambio **humano posterior** (ej.
+  pasar a `En diseño`) **sí** se detecta con normalidad.
+- **Cotización manual** (analista): el flujo no puede saber cuándo el analista
+  envió la cotización, así que el `Estado` queda en `Recibido` hasta que una
+  persona lo actualice en la hoja (eso lo detecta el carril 2). El evento
+  "Cotización enviada" del carril automático queda además en *Log de Eventos*.
+
 ## Validación
 
 - JSON válido (`python3 -m json.tool`).

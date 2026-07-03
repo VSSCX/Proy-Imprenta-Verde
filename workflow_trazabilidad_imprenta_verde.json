@@ -610,6 +610,15 @@
                 "type": "string",
                 "operation": "equals"
               }
+            },
+            {
+              "id": "cond-cotiz-enviada",
+              "leftValue": "={{ $json.Estado }}",
+              "rightValue": "Cotizacion enviada",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
           ],
           "combinator": "or"
@@ -2297,6 +2306,82 @@
         "width": 240,
         "color": 1
       }
+    },
+    {
+      "id": "node-update-estado-cotiz",
+      "name": "Actualizar estado: Cotizacion enviada",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        3900,
+        20
+      ],
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Ordenes de Taller",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID_OT": "={{ $('Preparar notificacion cliente').item.json.ID_OT }}",
+            "Estado": "Cotizacion enviada"
+          },
+          "schema": [
+            {
+              "id": "ID_OT",
+              "displayName": "ID_OT",
+              "required": false,
+              "defaultMatch": true,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string"
+            }
+          ],
+          "matchingColumns": [
+            "ID_OT"
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets - La Imprenta Verde"
+        }
+      }
+    },
+    {
+      "id": "node-sticky-estado",
+      "name": "Sticky - Estado cotizacion",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3860,
+        -110
+      ],
+      "parameters": {
+        "content": "## Estado -> Cotizacion enviada\nAl enviar la cotizacion automatica (PDF o fallback) se actualiza el Estado de la OT en la hoja de trazabilidad.",
+        "height": 130,
+        "width": 320,
+        "color": 3
+      }
     }
   ],
   "connections": {
@@ -2704,6 +2789,11 @@
             "node": "Log evento: cotizacion enviada",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Actualizar estado: Cotizacion enviada",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -2713,6 +2803,11 @@
         [
           {
             "node": "Etiquetar correo: Cotizacion enviada",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Actualizar estado: Cotizacion enviada",
             "type": "main",
             "index": 0
           }
